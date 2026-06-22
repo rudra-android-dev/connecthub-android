@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.connecthub.firebase.FirebaseManager
+import com.example.connecthub.ui.NavGraph
 import com.example.connecthub.ui.auth.LoginScreen
 import com.example.connecthub.ui.auth.RegisterScreen
 import com.example.connecthub.ui.theme.ConnectHubTheme
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
 
-                        LoginScreen(onRegisterClick = {})
+                        NavGraph()
                     }
                 }
             }
