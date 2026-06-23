@@ -10,10 +10,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.connecthub.viewmodel.AuthViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun LoginScreen(
     onRegisterClick: () -> Unit,
+    onLoginSuccess: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
@@ -21,6 +23,15 @@ fun LoginScreen(
 
 
     val state by viewModel.authState.collectAsState()
+
+    LaunchedEffect(state.success) {
+
+        if (state.success) {
+
+            onLoginSuccess()
+
+        }
+    }
 
     Column(
         modifier = Modifier

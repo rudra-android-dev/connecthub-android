@@ -14,6 +14,7 @@ import com.example.connecthub.viewmodel.AuthViewModel
 @Composable
 fun RegisterScreen(
     onLoginClick: () -> Unit,
+    onRegisterSuccess: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
     var username by remember { mutableStateOf("") }
@@ -21,6 +22,15 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
 
     val state by viewModel.authState.collectAsState()
+
+    LaunchedEffect(state.success) {
+
+        if (state.success) {
+
+            onRegisterSuccess()
+
+        }
+    }
 
     Column(
         modifier = Modifier
