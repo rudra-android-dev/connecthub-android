@@ -67,9 +67,21 @@ fun NavGraph() {
         }
         composable("feed") {
             FeedScreen(
+
                 onLogoutClick = {
 
+                    viewModel.logout()
+
+                    navController.navigate("login") {
+
+                        popUpTo("feed") {
+                            inclusive = true
+                        }
+
+                    }
+
                 }
+
             )
         }
     }
