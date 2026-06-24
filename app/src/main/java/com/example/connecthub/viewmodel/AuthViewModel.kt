@@ -38,7 +38,7 @@ class AuthViewModel : ViewModel() {
 
         _authState.value = AuthUiState(isLoading = true)
 
-        repository.registerUser(email, password) { success, message ->
+        repository.registerUser(username, email, password) { success, message ->
             _authState.value = if (success) {
                 AuthUiState(success = true)
             } else {
