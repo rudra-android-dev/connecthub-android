@@ -29,11 +29,13 @@ fun NavGraph() {
             LoginScreen(
 
                 onRegisterClick = {
+                    viewModel.resetState()
                     navController.navigate("register")
                 },
 
                 onLoginSuccess = {
 
+                    viewModel.resetState()
                     navController.navigate("feed") {
 
                         popUpTo("login") {
@@ -49,11 +51,13 @@ fun NavGraph() {
             RegisterScreen(
 
                 onLoginClick = {
+                    viewModel.resetState()
                     navController.popBackStack()
                 },
 
                 onRegisterSuccess = {
 
+                    viewModel.resetState()
                     navController.navigate("feed") {
 
                         popUpTo("register") {
