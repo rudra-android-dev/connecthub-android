@@ -5,14 +5,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 
-
 class AuthRepository {
 
     private val auth = FirebaseAuth.getInstance()
-
     private val firestore = FirebaseFirestore.getInstance()
 
     fun registerUser(
+        username: String,
         email: String,
         password: String,
         onResult: (Boolean, String?) -> Unit
@@ -20,13 +19,17 @@ class AuthRepository {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    onResult(true, null)
+                    val uid = auth.currentUser?.uid
+                    if (uid != null) {
+                        saveUserToFirestore(uid, username, email, onResult)
+                    } else {
+                        onResult(false, "User created but UID not found.")
+                    }
                 } else {
                     onResult(false, task.exception?.message)
                 }
             }
     }
-
 
     fun loginUser(
         email: String,
@@ -43,25 +46,41 @@ class AuthRepository {
             }
     }
 
-
     fun logout() {
         auth.signOut()
     }
 
     fun currentUser() = auth.currentUser
 
-    private fun saveUserToFirestore(
 
-        uid: String,
-
-        username: String,
-
-        email: String,
-
-        onResult: (Boolean, String?) -> Unit
-
+    fun getCurrentUserData(
+        onResult: (User?) -> Unit
     ) {
+        val uid = auth.currentUser?.uid
 
+        if (uid == null) {
+            onResult(null)
+            return
+        }
+
+        firestore
+            .collection(Constants.USERS_COLLECTION)
+            .document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                onResult(document.toObject(User::class.java))
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+    private fun saveUserToFirestore(
+        uid: String,
+        username: String,
+        email: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
         val user = User(
             uid = uid,
             username = username,
@@ -73,17 +92,10 @@ class AuthRepository {
             .document(uid)
             .set(user)
             .addOnSuccessListener {
-
                 onResult(true, null)
-
             }
-            .addOnFailureListener {
-
-                onResult(
-                    false,
-                    it.message
-                )
-
+            .addOnFailureListener { exception ->
+                onResult(false, exception.message)
             }
     }
 }
