@@ -2,9 +2,13 @@ package com.example.connecthub.ui.feed
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +37,11 @@ fun FeedScreen(
 
     val state by viewModel.uiState.collectAsState()
 
+
+    LaunchedEffect(Unit) {
+        viewModel.startListeningToPosts()
+    }
+
     LaunchedEffect(state.success) {
         if (state.success) {
             postText = ""
@@ -44,7 +53,7 @@ fun FeedScreen(
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
 
         Text(
@@ -62,6 +71,8 @@ fun FeedScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         Button(
             onClick = {
                 viewModel.createPost(postText)
@@ -71,13 +82,39 @@ fun FeedScreen(
             Text("Post")
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+
         if (state.isLoading) {
             CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
         }
+
 
         state.error?.let {
             Text(text = it)
+            Spacer(modifier = Modifier.height(16.dp))
         }
+
+
+        if (state.posts.isEmpty()) {
+            Text(
+                text = "No posts yet. Be the first to share something!",
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                items(state.posts) { post ->
+                    PostItem(post = post)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = onLogoutClick
