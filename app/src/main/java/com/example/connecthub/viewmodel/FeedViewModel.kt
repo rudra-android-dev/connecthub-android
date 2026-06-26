@@ -17,26 +17,59 @@ class FeedViewModel : ViewModel() {
 
         val text = content.trim()
 
-
         if (text.isEmpty()) {
-            _uiState.value = FeedUiState(
-                error = "Post cannot be empty."
+            _uiState.value = _uiState.value.copy(
+                error = "Post cannot be empty.",
+                success = false
             )
             return
         }
 
-
-        _uiState.value = FeedUiState(
-            isLoading = true
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            error = null,
+            success = false
         )
-
 
         repository.createPost(text) { success, message ->
             if (success) {
-                _uiState.value = FeedUiState(success = true)
+                _uiState.value = _uiState.value.copy(
+                    success = true,
+                    isLoading = false,
+                    error = null
+                )
             } else {
-                _uiState.value = FeedUiState(error = message)
+                _uiState.value = _uiState.value.copy(
+                    error = message,
+                    isLoading = false,
+                    success = false
+                )
             }
         }
+    }
+
+
+    fun startListeningToPosts() {
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            error = null
+        )
+
+        repository.listenForPosts(
+            onPostsChanged = { posts ->
+                _uiState.value = _uiState.value.copy(
+                    posts = posts,
+                    isLoading = false,
+                    error = null
+                )
+            },
+            onError = { message ->
+                _uiState.value = _uiState.value.copy(
+                    error = message,
+                    isLoading = false
+                )
+            }
+        )
     }
 }
