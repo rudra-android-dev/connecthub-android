@@ -5,6 +5,7 @@ import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class FeedRepository {
 
@@ -58,6 +59,33 @@ class FeedRepository {
             }
             .addOnFailureListener { exception ->
                 onResult(false, exception.message)
+            }
+    }
+
+
+    fun listenForPosts(
+        onPostsChanged: (List<Post>) -> Unit,
+        onError: (String?) -> Unit
+    ) {
+        firestore
+            .collection(Constants.POSTS_COLLECTION)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+
+                if (error != null) {
+                    onError(error.message)
+                    return@addSnapshotListener
+                }
+
+                val posts = mutableListOf<Post>()
+
+                snapshot?.documents?.forEach { document ->
+                    document.toObject(Post::class.java)?.let {
+                        posts.add(it)
+                    }
+                }
+
+                onPostsChanged(posts)
             }
     }
 }
