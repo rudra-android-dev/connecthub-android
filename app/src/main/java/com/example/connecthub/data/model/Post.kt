@@ -10,7 +10,7 @@ data class Post(
 
     val content: String = "",
 
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 
     val likeCount: Int = 0,
 
