@@ -70,9 +70,18 @@ class FeedViewModel : ViewModel() {
         )
     }
 
-
     fun toggleLike(post: Post) {
         repository.toggleLike(post) { success, errorMessage ->
+            if (!success) {
+                _uiState.value = _uiState.value.copy(
+                    error = errorMessage
+                )
+            }
+        }
+    }
+
+    fun deletePost(postId: String) {
+        repository.deletePost(postId) { success, errorMessage ->
             if (!success) {
                 _uiState.value = _uiState.value.copy(
                     error = errorMessage
