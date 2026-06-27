@@ -109,7 +109,6 @@ fun FeedScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-
                 items(state.posts) { post ->
                     PostItem(
                         post = post,
