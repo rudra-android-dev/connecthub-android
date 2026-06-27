@@ -12,4 +12,8 @@ data class Post(
 
     val createdAt: Long = System.currentTimeMillis()
 
+    val likeCount: Int = 0,
+
+    val likedBy: List<String> = emptyList()
+
 )

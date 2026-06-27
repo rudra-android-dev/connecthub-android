@@ -10,7 +10,6 @@ import com.google.firebase.firestore.Query
 class FeedRepository {
 
     private val auth = FirebaseAuth.getInstance()
-
     private val firestore = FirebaseFirestore.getInstance()
 
     fun createPost(
@@ -62,7 +61,6 @@ class FeedRepository {
             }
     }
 
-
     fun listenForPosts(
         onPostsChanged: (List<Post>) -> Unit,
         onError: (String?) -> Unit
@@ -86,6 +84,58 @@ class FeedRepository {
                 }
 
                 onPostsChanged(posts)
+            }
+    }
+
+
+    fun toggleLike(
+        post: Post,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            onResult(false, "User not logged in.")
+            return
+        }
+
+
+        val postRef = firestore
+            .collection(Constants.POSTS_COLLECTION)
+            .document(post.postId)
+
+
+        firestore.runTransaction { transaction ->
+
+            val snapshot = transaction.get(postRef)
+            val currentPost = snapshot.toObject(Post::class.java)
+                ?: return@runTransaction
+
+
+            val likedUsers = currentPost.likedBy.toMutableList()
+
+
+            if (likedUsers.contains(currentUser.uid)) {
+                likedUsers.remove(currentUser.uid)
+            } else {
+                likedUsers.add(currentUser.uid)
+            }
+
+
+            transaction.update(
+                postRef,
+                mapOf(
+                    "likedBy" to likedUsers,
+                    "likeCount" to likedUsers.size
+                )
+            )
+        }
+
+            .addOnSuccessListener {
+                onResult(true, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(false, exception.message)
             }
     }
 }

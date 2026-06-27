@@ -1,6 +1,7 @@
 package com.example.connecthub.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.connecthub.data.model.Post
 import com.example.connecthub.data.repository.FeedRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,11 +11,9 @@ class FeedViewModel : ViewModel() {
     private val repository = FeedRepository()
 
     private val _uiState = MutableStateFlow(FeedUiState())
-
     val uiState = _uiState.asStateFlow()
 
     fun createPost(content: String) {
-
         val text = content.trim()
 
         if (text.isEmpty()) {
@@ -48,9 +47,7 @@ class FeedViewModel : ViewModel() {
         }
     }
 
-
     fun startListeningToPosts() {
-
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             error = null
@@ -71,5 +68,16 @@ class FeedViewModel : ViewModel() {
                 )
             }
         )
+    }
+
+
+    fun toggleLike(post: Post) {
+        repository.toggleLike(post) { success, errorMessage ->
+            if (!success) {
+                _uiState.value = _uiState.value.copy(
+                    error = errorMessage
+                )
+            }
+        }
     }
 }

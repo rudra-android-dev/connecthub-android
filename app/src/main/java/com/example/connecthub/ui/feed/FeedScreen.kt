@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.connecthub.viewmodel.FeedViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FeedScreen(
@@ -37,6 +38,9 @@ fun FeedScreen(
 
     val state by viewModel.uiState.collectAsState()
 
+    val currentUserId = remember {
+        FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.startListeningToPosts()
@@ -84,18 +88,15 @@ fun FeedScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         if (state.isLoading) {
             CircularProgressIndicator()
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-
         state.error?.let {
             Text(text = it)
             Spacer(modifier = Modifier.height(16.dp))
         }
-
 
         if (state.posts.isEmpty()) {
             Text(
@@ -108,8 +109,18 @@ fun FeedScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
+
                 items(state.posts) { post ->
-                    PostItem(post = post)
+                    PostItem(
+                        post = post,
+                        currentUserId = currentUserId,
+                        onLikeClick = {
+                            viewModel.toggleLike(post)
+                        },
+                        onDeleteClick = {
+                            viewModel.deletePost(post.postId)
+                        }
+                    )
                 }
             }
         }
