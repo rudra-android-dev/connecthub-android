@@ -145,4 +145,24 @@ class FeedRepository {
                 onResult(false, exception.message)
             }
     }
+
+    fun getUserPostCount(onResult: (Int) -> Unit) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            onResult(0)
+            return
+        }
+
+        firestore
+            .collection(Constants.POSTS_COLLECTION)
+            .whereEqualTo("userId", currentUser.uid)
+            .get()
+            .addOnSuccessListener { documents ->
+                onResult(documents.size())
+            }
+            .addOnFailureListener {
+                onResult(0)
+            }
+    }
+
 }
