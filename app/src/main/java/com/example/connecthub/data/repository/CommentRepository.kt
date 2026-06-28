@@ -10,7 +10,72 @@ import com.google.firebase.firestore.Query
 class CommentRepository {
 
     private val auth = FirebaseAuth.getInstance()
-
     private val firestore = FirebaseFirestore.getInstance()
+
+    fun addComment(
+        postId: String,
+        content: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val currentUserId = auth.currentUser?.uid
+        if (currentUserId == null) {
+            onResult(false, "User not logged in.")
+            return
+        }
+
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(currentUserId)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                val user = documentSnapshot.toObject(User::class.java)
+                val username = user?.username ?: "Anonymous"
+
+                val commentRef = firestore.collection(Constants.COMMENTS_COLLECTION).document()
+                val commentId = commentRef.id
+
+                val newComment = Comment(
+                    commentId = commentId,
+                    postId = postId,
+                    userId = currentUserId,
+                    username = username,
+                    content = content,
+                    createdAt = System.currentTimeMillis()
+                )
+
+                commentRef.set(newComment)
+                    .addOnSuccessListener {
+                        onResult(true, null)
+                    }
+                    .addOnFailureListener { exception ->
+                        onResult(false, exception.localizedMessage)
+                    }
+            }
+            .addOnFailureListener { exception ->
+                onResult(false, "Failed to fetch user profile: ${exception.localizedMessage}")
+            }
+    }
+
+    fun listenForComments(
+        postId: String,
+        onCommentsChanged: (List<Comment>) -> Unit,
+        onError: (String?) -> Unit
+    ) {
+        firestore.collection(Constants.COMMENTS_COLLECTION)
+            .whereEqualTo("postId", postId)
+            .orderBy("createdAt", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error.localizedMessage)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val commentsList = snapshot.documents.mapNotNull { document ->
+                        document.toObject(Comment::class.java)
+                    }
+                    onCommentsChanged(commentsList)
+                }
+            }
+    }
 
 }
