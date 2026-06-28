@@ -6,4 +6,6 @@ object Constants {
 
     const val POSTS_COLLECTION = "posts"
 
+    const val COMMENTS_COLLECTION = "comments"
+
 }
