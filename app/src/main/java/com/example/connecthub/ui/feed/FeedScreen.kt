@@ -30,7 +30,8 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onCommentClick: (String, String) -> Unit
 ) {
     var postText by remember {
         mutableStateOf("")
@@ -118,6 +119,9 @@ fun FeedScreen(
                         },
                         onDeleteClick = {
                             viewModel.deletePost(post.postId)
+                        },
+                        onCommentClick = {
+                            onCommentClick(post.postId, post.content)
                         }
                     )
                 }

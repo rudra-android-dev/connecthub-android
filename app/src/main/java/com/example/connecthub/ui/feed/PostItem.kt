@@ -31,7 +31,8 @@ fun PostItem(
     post: Post,
     currentUserId: String,
     onLikeClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onCommentClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -104,6 +105,24 @@ fun PostItem(
 
                 Text(
                     text = post.likeCount.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                IconButton(onClick = onCommentClick) {
+                    Text(
+                        text = "💬",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(
+                    text = "0",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -12,7 +12,6 @@ class CommentViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CommentUiState())
     val uiState = _uiState.asStateFlow()
 
-
     fun addComment(postId: String, content: String) {
         val text = content.trim()
         if (text.isEmpty()) {
@@ -39,5 +38,25 @@ class CommentViewModel : ViewModel() {
                 )
             }
         }
+    }
+    fun startListening(postId: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+
+        repository.listenForComments(
+            postId = postId,
+            onCommentsChanged = { updatedComments ->
+                _uiState.value = _uiState.value.copy(
+                    comments = updatedComments,
+                    isLoading = false,
+                    error = null
+                )
+            },
+            onError = { errorMessage ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = errorMessage ?: "Failed to load comments."
+                )
+            }
+        )
     }
 }
