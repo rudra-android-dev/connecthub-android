@@ -63,5 +63,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.compose.material:material-icons-extended")
+    // Retrofit for ImgBB API calls
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
 
 }
