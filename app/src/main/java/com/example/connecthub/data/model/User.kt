@@ -8,6 +8,10 @@ data class User(
 
     val email: String = "",
 
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    val bio: String = "",
+
+    val profileImageUrl: String = ""
 
 )

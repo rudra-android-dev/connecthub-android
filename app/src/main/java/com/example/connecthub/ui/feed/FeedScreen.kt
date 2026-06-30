@@ -31,7 +31,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
     onLogoutClick: () -> Unit,
-    onCommentClick: (String, String) -> Unit
+    onCommentClick: (String, String) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     var postText by remember {
         mutableStateOf("")
@@ -131,7 +132,17 @@ fun FeedScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onLogoutClick
+            onClick = onProfileClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Go to Profile")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onLogoutClick,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Logout")
         }

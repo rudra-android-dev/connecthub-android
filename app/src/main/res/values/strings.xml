@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ConnectHub</string>
+    <string name="imgbb_api_key" translatable="false">fcf0e29049e9612ec805da803a024322</string>
 </resources>

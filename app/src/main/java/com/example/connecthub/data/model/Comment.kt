@@ -12,6 +12,9 @@ data class Comment(
 
     val content: String = "",
 
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    val profileImageUrl: String = ""
+
 
 )

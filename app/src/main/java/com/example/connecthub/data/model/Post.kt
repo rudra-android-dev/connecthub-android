@@ -14,6 +14,10 @@ data class Post(
 
     val likeCount: Int = 0,
 
-    val likedBy: List<String> = emptyList()
+    val likedBy: List<String> = emptyList(),
+
+    val commentCount: Int = 0,
+
+    val profileImageUrl: String = ""
 
 )

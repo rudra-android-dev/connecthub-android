@@ -4,6 +4,7 @@ import com.example.connecthub.data.model.Comment
 import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
@@ -39,11 +40,16 @@ class CommentRepository {
                     userId = currentUserId,
                     username = username,
                     content = content,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = System.currentTimeMillis(),
+                    profileImageUrl = user?.profileImageUrl ?: ""
                 )
 
                 commentRef.set(newComment)
                     .addOnSuccessListener {
+                        firestore.collection(Constants.POSTS_COLLECTION)
+                            .document(postId)
+                            .update("commentCount", FieldValue.increment(1))
+
                         onResult(true, null)
                     }
                     .addOnFailureListener { exception ->

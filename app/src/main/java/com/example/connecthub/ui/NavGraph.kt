@@ -11,8 +11,11 @@ import com.example.connecthub.ui.auth.LoginScreen
 import com.example.connecthub.ui.auth.RegisterScreen
 import com.example.connecthub.ui.feed.CommentScreen
 import com.example.connecthub.ui.feed.FeedScreen
+import com.example.connecthub.ui.profile.EditProfileScreen
+import com.example.connecthub.ui.profile.ProfileScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
+import com.example.connecthub.viewmodel.ProfileViewModel
 
 @Composable
 fun NavGraph() {
@@ -73,7 +76,33 @@ fun NavGraph() {
                 },
                 onCommentClick = { postId, postText ->
                     navController.navigate("comment/$postId?postText=$postText")
+                },
+                onProfileClick = {
+                    navController.navigate("profile")
                 }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                onLogoutClick = {
+                    viewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onEditProfileClick = {
+                    navController.navigate("editProfile")
+                }
+            )
+        }
+        composable("editProfile") {
+            val profileViewModel: ProfileViewModel = viewModel()
+
+            EditProfileScreen(
+                viewModel = profileViewModel,
+                onBackClick = { navController.popBackStack() }
             )
         }
         composable(

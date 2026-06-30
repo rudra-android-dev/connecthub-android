@@ -98,4 +98,35 @@ class AuthRepository {
                 onResult(false, exception.message)
             }
     }
+
+    fun updateUserProfile(
+        username: String,
+        bio: String,
+        profileImageUrl: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            onResult(false, "User not logged in.")
+            return
+        }
+
+        val updates = mapOf(
+            "username" to username,
+            "bio" to bio,
+            "profileImageUrl" to profileImageUrl
+        )
+
+        firestore
+            .collection(Constants.USERS_COLLECTION)
+            .document(uid)
+            .update(updates)
+            .addOnSuccessListener {
+                onResult(true, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(false, exception.message)
+            }
+    }
+
 }

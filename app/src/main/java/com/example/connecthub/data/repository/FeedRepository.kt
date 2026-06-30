@@ -42,7 +42,8 @@ class FeedRepository {
                     postId = postId,
                     userId = firebaseUser.uid,
                     username = user.username,
-                    content = content
+                    content = content,
+                    profileImageUrl = user.profileImageUrl
                 )
 
                 firestore
