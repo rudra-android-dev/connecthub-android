@@ -13,9 +13,13 @@ import com.example.connecthub.ui.feed.CommentScreen
 import com.example.connecthub.ui.feed.FeedScreen
 import com.example.connecthub.ui.profile.EditProfileScreen
 import com.example.connecthub.ui.profile.ProfileScreen
+import com.example.connecthub.ui.profile.SearchUserScreen
+import com.example.connecthub.ui.profile.UserProfileScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
+import com.example.connecthub.viewmodel.SearchViewModel
+import com.example.connecthub.viewmodel.UserProfileViewModel
 
 @Composable
 fun NavGraph() {
@@ -23,10 +27,7 @@ fun NavGraph() {
     val viewModel: AuthViewModel = viewModel()
 
     val startDestination =
-        if (viewModel.isUserLoggedIn())
-            "feed"
-        else
-            "login"
+        if (viewModel.isUserLoggedIn()) "feed" else "login"
 
     NavHost(
         navController = navController,
@@ -41,13 +42,12 @@ fun NavGraph() {
                 onLoginSuccess = {
                     viewModel.resetState()
                     navController.navigate("feed") {
-                        popUpTo("login") {
-                            inclusive = true
-                        }
+                        popUpTo("login") { inclusive = true }
                     }
                 }
             )
         }
+
         composable("register") {
             RegisterScreen(
                 onLoginClick = {
@@ -57,21 +57,18 @@ fun NavGraph() {
                 onRegisterSuccess = {
                     viewModel.resetState()
                     navController.navigate("feed") {
-                        popUpTo("register") {
-                            inclusive = true
-                        }
+                        popUpTo("register") { inclusive = true }
                     }
                 }
             )
         }
+
         composable("feed") {
             FeedScreen(
                 onLogoutClick = {
                     viewModel.logout()
                     navController.navigate("login") {
-                        popUpTo("feed") {
-                            inclusive = true
-                        }
+                        popUpTo("feed") { inclusive = true }
                     }
                 },
                 onCommentClick = { postId, postText ->
@@ -79,17 +76,45 @@ fun NavGraph() {
                 },
                 onProfileClick = {
                     navController.navigate("profile")
+                },
+                onSearchClick = {
+                    navController.navigate("search")
                 }
             )
         }
+
+        composable("search") {
+            val searchViewModel: SearchViewModel = viewModel()
+            SearchUserScreen(
+                viewModel = searchViewModel,
+                onUserClick = { uid ->
+                    navController.navigate("user_profile/$uid")
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "user_profile/{uid}",
+            arguments = listOf(
+                navArgument("uid") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid").orEmpty()
+            val userProfileViewModel: UserProfileViewModel = viewModel()
+            UserProfileScreen(
+                uid = uid,
+                viewModel = userProfileViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
         composable("profile") {
             ProfileScreen(
                 onLogoutClick = {
                     viewModel.logout()
                     navController.navigate("login") {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onEditProfileClick = {
@@ -97,26 +122,28 @@ fun NavGraph() {
                 }
             )
         }
+
         composable("editProfile") {
             val profileViewModel: ProfileViewModel = viewModel()
-
             EditProfileScreen(
                 viewModel = profileViewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }
+
         composable(
             route = "comment/{postId}?postText={postText}",
             arguments = listOf(
                 navArgument("postId") { type = NavType.StringType },
-                navArgument("postText") { type = NavType.StringType; defaultValue = "Post Details" }
+                navArgument("postText") {
+                    type = NavType.StringType
+                    defaultValue = "Post Details"
+                }
             )
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId").orEmpty()
             val postText = backStackEntry.arguments?.getString("postText").orEmpty()
-
             val commentViewModel: CommentViewModel = viewModel()
-
             CommentScreen(
                 postId = postId,
                 postText = postText,
