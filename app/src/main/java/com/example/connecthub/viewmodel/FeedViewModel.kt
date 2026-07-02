@@ -3,6 +3,7 @@ package com.example.connecthub.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.connecthub.data.model.Post
 import com.example.connecthub.data.repository.FeedRepository
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -12,6 +13,8 @@ class FeedViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(FeedUiState())
     val uiState = _uiState.asStateFlow()
+
+    private var postsListener: ListenerRegistration? = null
 
     fun createPost(content: String) {
         val text = content.trim()
@@ -47,13 +50,19 @@ class FeedViewModel : ViewModel() {
         }
     }
 
+    fun resetSuccess() {
+        _uiState.value = _uiState.value.copy(success = false)
+    }
+
     fun startListeningToPosts() {
+        if (postsListener != null) return
+
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             error = null
         )
 
-        repository.listenForPosts(
+        postsListener = repository.listenForPosts(
             onPostsChanged = { posts ->
                 _uiState.value = _uiState.value.copy(
                     posts = posts,
@@ -88,5 +97,11 @@ class FeedViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        postsListener?.remove()
+        postsListener = null
     }
 }

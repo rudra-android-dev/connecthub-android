@@ -6,6 +6,7 @@ import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
 class CommentRepository {
@@ -49,7 +50,6 @@ class CommentRepository {
                         firestore.collection(Constants.POSTS_COLLECTION)
                             .document(postId)
                             .update("commentCount", FieldValue.increment(1))
-
                         onResult(true, null)
                     }
                     .addOnFailureListener { exception ->
@@ -65,8 +65,8 @@ class CommentRepository {
         postId: String,
         onCommentsChanged: (List<Comment>) -> Unit,
         onError: (String?) -> Unit
-    ) {
-        firestore.collection(Constants.COMMENTS_COLLECTION)
+    ): ListenerRegistration {
+        return firestore.collection(Constants.COMMENTS_COLLECTION)
             .whereEqualTo("postId", postId)
             .orderBy("createdAt", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
@@ -83,5 +83,4 @@ class CommentRepository {
                 }
             }
     }
-
 }

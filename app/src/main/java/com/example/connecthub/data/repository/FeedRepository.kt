@@ -5,6 +5,7 @@ import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
 class FeedRepository {
@@ -65,8 +66,8 @@ class FeedRepository {
     fun listenForPosts(
         onPostsChanged: (List<Post>) -> Unit,
         onError: (String?) -> Unit
-    ) {
-        firestore
+    ): ListenerRegistration {
+        return firestore
             .collection(Constants.POSTS_COLLECTION)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
@@ -165,5 +166,4 @@ class FeedRepository {
                 onResult(0)
             }
     }
-
 }

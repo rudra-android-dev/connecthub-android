@@ -68,6 +68,7 @@ fun CommentScreen(
             if (state.isLoading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
+
             state.error?.let { errorMsg ->
                 Text(
                     text = errorMsg,
@@ -103,8 +104,9 @@ fun CommentScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        viewModel.addComment(postId, commentText)
-                        commentText = ""
+                        viewModel.addComment(postId, commentText) {
+                            commentText = ""
+                        }
                     }
                 ) {
                     Text("SEND")

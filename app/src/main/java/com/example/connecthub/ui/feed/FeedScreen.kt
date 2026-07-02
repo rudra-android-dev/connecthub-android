@@ -32,11 +32,10 @@ fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
     onLogoutClick: () -> Unit,
     onCommentClick: (String, String) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) {
-    var postText by remember {
-        mutableStateOf("")
-    }
+    var postText by remember { mutableStateOf("") }
 
     val state by viewModel.uiState.collectAsState()
 
@@ -51,6 +50,7 @@ fun FeedScreen(
     LaunchedEffect(state.success) {
         if (state.success) {
             postText = ""
+            viewModel.resetSuccess()
         }
     }
 
@@ -62,27 +62,19 @@ fun FeedScreen(
         verticalArrangement = Arrangement.Top
     ) {
 
-        Text(
-            text = "Welcome to ConnectHub"
-        )
+        Text(text = "Welcome to ConnectHub")
 
         OutlinedTextField(
             value = postText,
-            onValueChange = {
-                postText = it
-            },
-            label = {
-                Text("What's on your mind?")
-            },
+            onValueChange = { postText = it },
+            label = { Text("What's on your mind?") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = {
-                viewModel.createPost(postText)
-            },
+            onClick = { viewModel.createPost(postText) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Post")
@@ -115,21 +107,24 @@ fun FeedScreen(
                     PostItem(
                         post = post,
                         currentUserId = currentUserId,
-                        onLikeClick = {
-                            viewModel.toggleLike(post)
-                        },
-                        onDeleteClick = {
-                            viewModel.deletePost(post.postId)
-                        },
-                        onCommentClick = {
-                            onCommentClick(post.postId, post.content)
-                        }
+                        onLikeClick = { viewModel.toggleLike(post) },
+                        onDeleteClick = { viewModel.deletePost(post.postId) },
+                        onCommentClick = { onCommentClick(post.postId, post.content) }
                     )
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onSearchClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Search Users")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = onProfileClick,
