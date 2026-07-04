@@ -11,12 +11,14 @@ import com.example.connecthub.ui.auth.LoginScreen
 import com.example.connecthub.ui.auth.RegisterScreen
 import com.example.connecthub.ui.feed.CommentScreen
 import com.example.connecthub.ui.feed.FeedScreen
+import com.example.connecthub.ui.notification.NotificationScreen
 import com.example.connecthub.ui.profile.EditProfileScreen
 import com.example.connecthub.ui.profile.ProfileScreen
 import com.example.connecthub.ui.profile.SearchUserScreen
 import com.example.connecthub.ui.profile.UserProfileScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
+import com.example.connecthub.viewmodel.NotificationViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
 import com.example.connecthub.viewmodel.SearchViewModel
 import com.example.connecthub.viewmodel.UserProfileViewModel
@@ -79,7 +81,18 @@ fun NavGraph() {
                 },
                 onSearchClick = {
                     navController.navigate("search")
+                },
+                onNotificationsClick = {
+                    navController.navigate("notifications")
                 }
+            )
+        }
+
+        composable("notifications") {
+            val notificationViewModel: NotificationViewModel = viewModel()
+            NotificationScreen(
+                viewModel = notificationViewModel,
+                onBackClick = { navController.popBackStack() }
             )
         }
 

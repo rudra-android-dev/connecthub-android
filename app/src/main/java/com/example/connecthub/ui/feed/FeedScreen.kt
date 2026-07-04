@@ -33,7 +33,8 @@ fun FeedScreen(
     onLogoutClick: () -> Unit,
     onCommentClick: (String, String) -> Unit,
     onProfileClick: () -> Unit,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onNotificationsClick: () -> Unit
 ) {
     var postText by remember { mutableStateOf("") }
 
@@ -94,7 +95,7 @@ fun FeedScreen(
 
         if (state.posts.isEmpty()) {
             Text(
-                text = "No posts yet. Be the first to share something!",
+                text = "No posts yet. Share something to get started!",
                 modifier = Modifier.padding(vertical = 16.dp)
             )
         } else {
@@ -116,6 +117,15 @@ fun FeedScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onNotificationsClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("🔔 Notifications")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = onSearchClick,
