@@ -16,10 +16,11 @@ class ProfileRepository {
         onResult: (List<User>) -> Unit,
         onError: (String?) -> Unit
     ): ListenerRegistration {
+        val queryLower = query.lowercase()
         return firestore
             .collection(Constants.USERS_COLLECTION)
-            .whereGreaterThanOrEqualTo("username", query)
-            .whereLessThanOrEqualTo("username", query + "\uf8ff")
+            .whereGreaterThanOrEqualTo("usernameLower", queryLower)
+            .whereLessThanOrEqualTo("usernameLower", queryLower + "\uf8ff")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onError(error.message)

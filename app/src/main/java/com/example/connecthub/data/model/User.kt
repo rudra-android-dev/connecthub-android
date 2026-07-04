@@ -6,6 +6,8 @@ data class User(
 
     val username: String = "",
 
+    val usernameLower: String = "",
+
     val email: String = "",
 
     val createdAt: Long = System.currentTimeMillis(),

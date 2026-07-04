@@ -87,7 +87,10 @@ class ProfileViewModel : ViewModel() {
                 if (uploadedUrl != null) {
                     finalImageUrl = uploadedUrl
                 } else {
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to upload image.")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to upload image."
+                    )
                     onComplete(false)
                     return@launch
                 }
@@ -95,6 +98,7 @@ class ProfileViewModel : ViewModel() {
 
             val updates = mapOf(
                 "username" to newUsername,
+                "usernameLower" to newUsername.lowercase(),
                 "bio" to newBio,
                 "profileImageUrl" to finalImageUrl
             )
@@ -108,7 +112,10 @@ class ProfileViewModel : ViewModel() {
                     onComplete(true)
                 }
                 .addOnFailureListener { exception ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = exception.message)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = exception.message
+                    )
                     onComplete(false)
                 }
         }
