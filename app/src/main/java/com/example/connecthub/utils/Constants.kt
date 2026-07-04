@@ -8,4 +8,6 @@ object Constants {
 
     const val COMMENTS_COLLECTION = "comments"
 
+    const val NOTIFICATIONS_COLLECTION = "notifications"
+
 }
