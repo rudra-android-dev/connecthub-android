@@ -45,7 +45,6 @@ fun NotificationScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadNotifications()
-        viewModel.markAllAsRead()
     }
 
     Scaffold(
@@ -53,7 +52,10 @@ fun NotificationScreen(
             TopAppBar(
                 title = { Text("Notifications") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        viewModel.markAllAsRead()
+                        onBackClick()
+                    }) {
                         Text("←")
                     }
                 }

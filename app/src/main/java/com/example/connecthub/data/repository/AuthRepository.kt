@@ -44,17 +44,15 @@ class AuthRepository {
             }
     }
 
-    fun logoutUser() {
+    fun logout() {
         auth.signOut()
     }
 
-    fun isUserLoggedIn(): Boolean {
-        return auth.currentUser != null
-    }
+    fun currentUser() = auth.currentUser
 
-    fun getCurrentUserId(): String? {
-        return auth.currentUser?.uid
-    }
+    fun logoutUser() = logout()
+    fun isUserLoggedIn(): Boolean = auth.currentUser != null
+    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     private fun saveUserToFirestore(
         uid: String,
