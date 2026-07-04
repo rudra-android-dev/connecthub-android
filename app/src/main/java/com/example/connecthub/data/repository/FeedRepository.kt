@@ -12,6 +12,7 @@ class FeedRepository {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private val notificationRepository = NotificationRepository()
 
     fun createPost(
         content: String,
@@ -51,16 +52,10 @@ class FeedRepository {
                     .collection(Constants.POSTS_COLLECTION)
                     .document(postId)
                     .set(post)
-                    .addOnSuccessListener {
-                        onResult(true, null)
-                    }
-                    .addOnFailureListener { exception ->
-                        onResult(false, exception.message)
-                    }
+                    .addOnSuccessListener { onResult(true, null) }
+                    .addOnFailureListener { exception -> onResult(false, exception.message) }
             }
-            .addOnFailureListener { exception ->
-                onResult(false, exception.message)
-            }
+            .addOnFailureListener { exception -> onResult(false, exception.message) }
     }
 
     fun listenForPosts(
@@ -71,20 +66,15 @@ class FeedRepository {
             .collection(Constants.POSTS_COLLECTION)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
-
                 if (error != null) {
                     onError(error.message)
                     return@addSnapshotListener
                 }
 
                 val posts = mutableListOf<Post>()
-
                 snapshot?.documents?.forEach { document ->
-                    document.toObject(Post::class.java)?.let {
-                        posts.add(it)
-                    }
+                    document.toObject(Post::class.java)?.let { posts.add(it) }
                 }
-
                 onPostsChanged(posts)
             }
     }
@@ -103,33 +93,46 @@ class FeedRepository {
             .collection(Constants.POSTS_COLLECTION)
             .document(post.postId)
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(postRef)
-            val currentPost = snapshot.toObject(Post::class.java)
-                ?: return@runTransaction
+        // Load current user's username for notification
+        firestore.collection(Constants.USERS_COLLECTION)
+            .document(currentUser.uid)
+            .get()
+            .addOnSuccessListener { userDoc ->
+                val currentUsername = userDoc.toObject(User::class.java)?.username ?: ""
 
-            val likedUsers = currentPost.likedBy.toMutableList()
+                firestore.runTransaction { transaction ->
+                    val snapshot = transaction.get(postRef)
+                    val currentPost = snapshot.toObject(Post::class.java)
+                        ?: return@runTransaction
 
-            if (likedUsers.contains(currentUser.uid)) {
-                likedUsers.remove(currentUser.uid)
-            } else {
-                likedUsers.add(currentUser.uid)
-            }
+                    val likedUsers = currentPost.likedBy.toMutableList()
 
-            transaction.update(
-                postRef,
-                mapOf(
-                    "likedBy" to likedUsers,
-                    "likeCount" to likedUsers.size
-                )
-            )
-        }
-            .addOnSuccessListener {
-                onResult(true, null)
+                    if (likedUsers.contains(currentUser.uid)) {
+                        likedUsers.remove(currentUser.uid)
+                    } else {
+                        likedUsers.add(currentUser.uid)
+                        // Send notification when liking (not un-liking)
+                        notificationRepository.createNotification(
+                            receiverId = currentPost.userId,
+                            senderId = currentUser.uid,
+                            senderUsername = currentUsername,
+                            type = "LIKE",
+                            postId = post.postId
+                        )
+                    }
+
+                    transaction.update(
+                        postRef,
+                        mapOf(
+                            "likedBy" to likedUsers,
+                            "likeCount" to likedUsers.size
+                        )
+                    )
+                }
+                    .addOnSuccessListener { onResult(true, null) }
+                    .addOnFailureListener { exception -> onResult(false, exception.message) }
             }
-            .addOnFailureListener { exception ->
-                onResult(false, exception.message)
-            }
+            .addOnFailureListener { exception -> onResult(false, exception.message) }
     }
 
     fun deletePost(
@@ -140,12 +143,8 @@ class FeedRepository {
             .collection(Constants.POSTS_COLLECTION)
             .document(postId)
             .delete()
-            .addOnSuccessListener {
-                onResult(true, null)
-            }
-            .addOnFailureListener { exception ->
-                onResult(false, exception.message)
-            }
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { exception -> onResult(false, exception.message) }
     }
 
     fun getUserPostCount(onResult: (Int) -> Unit) {
@@ -159,11 +158,7 @@ class FeedRepository {
             .collection(Constants.POSTS_COLLECTION)
             .whereEqualTo("userId", currentUser.uid)
             .get()
-            .addOnSuccessListener { documents ->
-                onResult(documents.size())
-            }
-            .addOnFailureListener {
-                onResult(0)
-            }
+            .addOnSuccessListener { documents -> onResult(documents.size()) }
+            .addOnFailureListener { onResult(0) }
     }
 }

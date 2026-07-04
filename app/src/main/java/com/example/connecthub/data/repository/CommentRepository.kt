@@ -1,6 +1,7 @@
 package com.example.connecthub.data.repository
 
 import com.example.connecthub.data.model.Comment
+import com.example.connecthub.data.model.Post
 import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
@@ -13,6 +14,7 @@ class CommentRepository {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private val notificationRepository = NotificationRepository()
 
     fun addComment(
         postId: String,
@@ -32,7 +34,9 @@ class CommentRepository {
                 val user = documentSnapshot.toObject(User::class.java)
                 val username = user?.username ?: "Anonymous"
 
-                val commentRef = firestore.collection(Constants.COMMENTS_COLLECTION).document()
+                val commentRef = firestore
+                    .collection(Constants.COMMENTS_COLLECTION)
+                    .document()
                 val commentId = commentRef.id
 
                 val newComment = Comment(
@@ -50,6 +54,23 @@ class CommentRepository {
                         firestore.collection(Constants.POSTS_COLLECTION)
                             .document(postId)
                             .update("commentCount", FieldValue.increment(1))
+
+                        firestore.collection(Constants.POSTS_COLLECTION)
+                            .document(postId)
+                            .get()
+                            .addOnSuccessListener { postDoc ->
+                                val post = postDoc.toObject(Post::class.java)
+                                if (post != null) {
+                                    notificationRepository.createNotification(
+                                        receiverId = post.userId,
+                                        senderId = currentUserId,
+                                        senderUsername = username,
+                                        type = "COMMENT",
+                                        postId = postId
+                                    )
+                                }
+                            }
+
                         onResult(true, null)
                     }
                     .addOnFailureListener { exception ->
