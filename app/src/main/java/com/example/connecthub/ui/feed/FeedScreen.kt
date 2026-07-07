@@ -9,10 +9,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,6 +35,7 @@ import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.FeedViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
@@ -37,7 +45,8 @@ fun FeedScreen(
     onProfileClick: () -> Unit,
     onSearchClick: () -> Unit,
     onNotificationsClick: () -> Unit,
-    onBookmarksClick: () -> Unit
+    onBookmarksClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     var postText by remember { mutableStateOf("") }
 
@@ -60,112 +69,127 @@ fun FeedScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-
-        Text(text = "Welcome to ConnectHub")
-
-        OutlinedTextField(
-            value = postText,
-            onValueChange = { postText = it },
-            label = { Text("What's on your mind?") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = { viewModel.createPost(postText) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Post")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (state.isLoading) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        state.error?.let {
-            Text(text = it)
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        if (state.posts.isEmpty()) {
-            Text(
-                text = "No posts yet. Share something to get started!",
-                modifier = Modifier.padding(vertical = 16.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("ConnectHub") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                }
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+
+            OutlinedTextField(
+                value = postText,
+                onValueChange = { postText = it },
+                label = { Text("What's on your mind?") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = { viewModel.createPost(postText) },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items(state.posts) { post ->
-                    PostItem(
-                        post = post,
-                        currentUserId = currentUserId,
-                        isBookmarked = bookmarkState.bookmarkedPostIds.contains(post.postId),
-                        onLikeClick = { viewModel.toggleLike(post) },
-                        onDeleteClick = { viewModel.deletePost(post.postId) },
-                        onCommentClick = { onCommentClick(post.postId, post.content) },
-                        onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
-                    )
+                Text("Post")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (state.isLoading) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            state.error?.let {
+                Text(text = it)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (state.posts.isEmpty()) {
+                Text(
+                    text = "No posts yet. Share something to get started!",
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    items(state.posts) { post ->
+                        PostItem(
+                            post = post,
+                            currentUserId = currentUserId,
+                            isBookmarked = bookmarkState.bookmarkedPostIds.contains(post.postId),
+                            onLikeClick = { viewModel.toggleLike(post) },
+                            onDeleteClick = { viewModel.deletePost(post.postId) },
+                            onCommentClick = { onCommentClick(post.postId, post.content) },
+                            onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Button(
-            onClick = onNotificationsClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("🔔 Notifications")
-        }
+            Button(
+                onClick = onNotificationsClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("🔔 Notifications")
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = onBookmarksClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("🔖 Bookmarks")
-        }
+            Button(
+                onClick = onBookmarksClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("🔖 Bookmarks")
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = onSearchClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Search Users")
-        }
+            Button(
+                onClick = onSearchClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Search Users")
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = onProfileClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Go to Profile")
-        }
+            Button(
+                onClick = onProfileClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Go to Profile")
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = onLogoutClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Logout")
+            Button(
+                onClick = onLogoutClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Logout")
+            }
         }
     }
 }

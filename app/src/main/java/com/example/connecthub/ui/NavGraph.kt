@@ -17,6 +17,7 @@ import com.example.connecthub.ui.profile.EditProfileScreen
 import com.example.connecthub.ui.profile.ProfileScreen
 import com.example.connecthub.ui.profile.SearchUserScreen
 import com.example.connecthub.ui.profile.UserProfileScreen
+import com.example.connecthub.ui.settings.SettingsScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
@@ -26,7 +27,10 @@ import com.example.connecthub.viewmodel.SearchViewModel
 import com.example.connecthub.viewmodel.UserProfileViewModel
 
 @Composable
-fun NavGraph() {
+fun NavGraph(
+    darkMode: Boolean,
+    onDarkModeChanged: (Boolean) -> Unit
+) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
@@ -91,7 +95,27 @@ fun NavGraph() {
                 },
                 onBookmarksClick = {
                     navController.navigate("bookmarks")
+                },
+                onSettingsClick = {
+                    navController.navigate("settings")
                 }
+            )
+        }
+
+        composable("settings") {
+            SettingsScreen(
+                darkMode = darkMode,
+                onDarkModeChanged = onDarkModeChanged,
+                onEditProfile = {
+                    navController.navigate("editProfile")
+                },
+                onLogout = {
+                    authViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
