@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -25,6 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,10 +47,40 @@ import com.example.connecthub.utils.TimeUtils
 fun PostItem(
     post: Post,
     currentUserId: String,
+    isBookmarked: Boolean = false,
     onLikeClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    onCommentClick: () -> Unit
+    onCommentClick: () -> Unit,
+    onBookmarkClick: () -> Unit = {}
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Post?") },
+            text = { Text("This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteClick()
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,21 +99,21 @@ fun PostItem(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (!post.profileImageUrl.isNullOrEmpty()) {
                         AsyncImage(
                             model = post.profileImageUrl,
                             contentDescription = "User Avatar",
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(48.dp)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Color.LightGray),
                             contentAlignment = Alignment.Center
@@ -84,7 +121,7 @@ fun PostItem(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                modifier = Modifier.size(22.dp),
+                                modifier = Modifier.size(26.dp),
                                 tint = Color.White
                             )
                         }
@@ -106,7 +143,7 @@ fun PostItem(
                 }
 
                 if (post.userId == currentUserId) {
-                    TextButton(onClick = onDeleteClick) {
+                    TextButton(onClick = { showDeleteDialog = true }) {
                         Text(
                             text = "Delete",
                             style = MaterialTheme.typography.labelLarge,
@@ -116,7 +153,7 @@ fun PostItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = post.content,
@@ -133,19 +170,20 @@ fun PostItem(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val hasLiked = post.likedBy.contains(currentUserId)
 
                 IconButton(onClick = onLikeClick) {
                     Icon(
-                        imageVector = if (hasLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (hasLiked) Icons.Default.Favorite
+                        else Icons.Default.FavoriteBorder,
                         contentDescription = "Like",
                         tint = if (hasLiked) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
                 Text(
                     text = post.likeCount.toString(),
                     style = MaterialTheme.typography.bodyMedium,
@@ -153,7 +191,7 @@ fun PostItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(20.dp))
 
                 IconButton(onClick = onCommentClick) {
                     Text(
@@ -161,13 +199,24 @@ fun PostItem(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-
                 Text(
                     text = post.commentCount.toString(),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                Spacer(modifier = Modifier.width(20.dp))
+
+                IconButton(onClick = onBookmarkClick) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark
+                        else Icons.Outlined.BookmarkBorder,
+                        contentDescription = "Bookmark",
+                        tint = if (isBookmarked) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
