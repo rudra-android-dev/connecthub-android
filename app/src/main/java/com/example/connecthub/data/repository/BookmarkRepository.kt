@@ -143,21 +143,4 @@ class BookmarkRepository {
             }
             .addOnFailureListener { onError(it.message) }
     }
-
-    fun isBookmarked(
-        postId: String,
-        onResult: (Boolean) -> Unit
-    ) {
-        val currentUser = auth.currentUser ?: return onResult(false)
-
-        firestore
-            .collection(Constants.BOOKMARKS_COLLECTION)
-            .whereEqualTo("userId", currentUser.uid)
-            .whereEqualTo("postId", postId)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                onResult(!snapshot.isEmpty)
-            }
-            .addOnFailureListener { onResult(false) }
-    }
 }

@@ -40,7 +40,7 @@ class BookmarkViewModel : ViewModel() {
                     bookmarkedPostIds = postIds.toSet()
                 )
             },
-            onError = { /* silent fail — bookmark icon just won't show as filled */ }
+            onError = { }
         )
     }
 

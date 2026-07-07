@@ -5,7 +5,6 @@ import com.example.connecthub.data.model.User
 import com.example.connecthub.utils.Constants
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.Query
 
 class ProfileRepository {
 
@@ -30,7 +29,9 @@ class ProfileRepository {
                 val users = mutableListOf<User>()
                 snapshot?.documents?.forEach {
                     it.toObject(User::class.java)?.let { user ->
-                        users.add(user)
+                        if (user.usernameLower.isNotBlank()) {
+                            users.add(user)
+                        }
                     }
                 }
                 onResult(users)
@@ -60,12 +61,11 @@ class ProfileRepository {
         firestore
             .collection(Constants.POSTS_COLLECTION)
             .whereEqualTo("userId", uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { snapshot ->
-                val posts = snapshot.documents.mapNotNull {
-                    it.toObject(Post::class.java)
-                }
+                val posts = snapshot.documents
+                    .mapNotNull { it.toObject(Post::class.java) }
+                    .sortedByDescending { it.createdAt }
                 onResult(posts)
             }
             .addOnFailureListener {
