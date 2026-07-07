@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.connecthub.ui.auth.LoginScreen
 import com.example.connecthub.ui.auth.RegisterScreen
+import com.example.connecthub.ui.bookmark.BookmarkScreen
 import com.example.connecthub.ui.feed.CommentScreen
 import com.example.connecthub.ui.feed.FeedScreen
 import com.example.connecthub.ui.notification.NotificationScreen
@@ -17,6 +18,7 @@ import com.example.connecthub.ui.profile.ProfileScreen
 import com.example.connecthub.ui.profile.SearchUserScreen
 import com.example.connecthub.ui.profile.UserProfileScreen
 import com.example.connecthub.viewmodel.AuthViewModel
+import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
 import com.example.connecthub.viewmodel.NotificationViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
@@ -26,10 +28,10 @@ import com.example.connecthub.viewmodel.UserProfileViewModel
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
-    val viewModel: AuthViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
     val startDestination =
-        if (viewModel.isUserLoggedIn()) "feed" else "login"
+        if (authViewModel.isUserLoggedIn()) "feed" else "login"
 
     NavHost(
         navController = navController,
@@ -38,11 +40,11 @@ fun NavGraph() {
         composable("login") {
             LoginScreen(
                 onRegisterClick = {
-                    viewModel.resetState()
+                    authViewModel.resetState()
                     navController.navigate("register")
                 },
                 onLoginSuccess = {
-                    viewModel.resetState()
+                    authViewModel.resetState()
                     navController.navigate("feed") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -53,11 +55,11 @@ fun NavGraph() {
         composable("register") {
             RegisterScreen(
                 onLoginClick = {
-                    viewModel.resetState()
+                    authViewModel.resetState()
                     navController.popBackStack()
                 },
                 onRegisterSuccess = {
-                    viewModel.resetState()
+                    authViewModel.resetState()
                     navController.navigate("feed") {
                         popUpTo("register") { inclusive = true }
                     }
@@ -66,9 +68,11 @@ fun NavGraph() {
         }
 
         composable("feed") {
+            val bookmarkViewModel: BookmarkViewModel = viewModel()
             FeedScreen(
+                bookmarkViewModel = bookmarkViewModel,
                 onLogoutClick = {
-                    viewModel.logout()
+                    authViewModel.logout()
                     navController.navigate("login") {
                         popUpTo("feed") { inclusive = true }
                     }
@@ -84,6 +88,20 @@ fun NavGraph() {
                 },
                 onNotificationsClick = {
                     navController.navigate("notifications")
+                },
+                onBookmarksClick = {
+                    navController.navigate("bookmarks")
+                }
+            )
+        }
+
+        composable("bookmarks") {
+            val bookmarkViewModel: BookmarkViewModel = viewModel()
+            BookmarkScreen(
+                viewModel = bookmarkViewModel,
+                onBackClick = { navController.popBackStack() },
+                onCommentClick = { postId, postText ->
+                    navController.navigate("comment/$postId?postText=$postText")
                 }
             )
         }
@@ -125,7 +143,7 @@ fun NavGraph() {
         composable("profile") {
             ProfileScreen(
                 onLogoutClick = {
-                    viewModel.logout()
+                    authViewModel.logout()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }

@@ -24,21 +24,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.FeedViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
+    bookmarkViewModel: BookmarkViewModel = viewModel(),
     onLogoutClick: () -> Unit,
     onCommentClick: (String, String) -> Unit,
     onProfileClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onNotificationsClick: () -> Unit
+    onNotificationsClick: () -> Unit,
+    onBookmarksClick: () -> Unit
 ) {
     var postText by remember { mutableStateOf("") }
 
     val state by viewModel.uiState.collectAsState()
+    val bookmarkState by bookmarkViewModel.uiState.collectAsState()
 
     val currentUserId = remember {
         FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
@@ -46,6 +50,7 @@ fun FeedScreen(
 
     LaunchedEffect(Unit) {
         viewModel.startListeningToPosts()
+        bookmarkViewModel.loadBookmarkedPostIds()
     }
 
     LaunchedEffect(state.success) {
@@ -108,9 +113,11 @@ fun FeedScreen(
                     PostItem(
                         post = post,
                         currentUserId = currentUserId,
+                        isBookmarked = bookmarkState.bookmarkedPostIds.contains(post.postId),
                         onLikeClick = { viewModel.toggleLike(post) },
                         onDeleteClick = { viewModel.deletePost(post.postId) },
-                        onCommentClick = { onCommentClick(post.postId, post.content) }
+                        onCommentClick = { onCommentClick(post.postId, post.content) },
+                        onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
                     )
                 }
             }
@@ -123,6 +130,15 @@ fun FeedScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("🔔 Notifications")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onBookmarksClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("🔖 Bookmarks")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
