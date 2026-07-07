@@ -10,4 +10,6 @@ object Constants {
 
     const val NOTIFICATIONS_COLLECTION = "notifications"
 
+    const val BOOKMARKS_COLLECTION = "bookmarks"
+
 }
