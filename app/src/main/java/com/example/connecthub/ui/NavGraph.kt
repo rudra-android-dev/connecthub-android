@@ -21,6 +21,7 @@ import com.example.connecthub.ui.settings.SettingsScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
+import com.example.connecthub.viewmodel.FollowViewModel
 import com.example.connecthub.viewmodel.NotificationViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
 import com.example.connecthub.viewmodel.SearchViewModel
@@ -157,9 +158,11 @@ fun NavGraph(
         ) { backStackEntry ->
             val uid = backStackEntry.arguments?.getString("uid").orEmpty()
             val userProfileViewModel: UserProfileViewModel = viewModel()
+            val followViewModel: FollowViewModel = viewModel()
             UserProfileScreen(
                 uid = uid,
                 viewModel = userProfileViewModel,
+                followViewModel = followViewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }
