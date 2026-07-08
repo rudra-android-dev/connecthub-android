@@ -1,6 +1,7 @@
 package com.example.connecthub.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.connecthub.data.repository.BlockRepository
 import com.example.connecthub.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class UserProfileViewModel : ViewModel() {
 
     private val repository = ProfileRepository()
+    private val blockRepository = BlockRepository()
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState = _uiState.asStateFlow()
@@ -31,6 +33,14 @@ class UserProfileViewModel : ViewModel() {
                     isLoading = false
                 )
             }
+        }
+    }
+
+    fun blockUser(uid: String) {
+        blockRepository.blockUser(uid) { success, message ->
+            _uiState.value = _uiState.value.copy(
+                blockMessage = if (success) "User blocked." else message
+            )
         }
     }
 }

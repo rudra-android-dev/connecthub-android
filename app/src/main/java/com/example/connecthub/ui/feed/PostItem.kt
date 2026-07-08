@@ -16,11 +16,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.connecthub.data.model.Post
+import com.example.connecthub.data.repository.ReportRepository
 import com.example.connecthub.utils.TimeUtils
 
 @Composable
@@ -54,6 +58,14 @@ fun PostItem(
     onBookmarkClick: () -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    var showReportDialog by remember { mutableStateOf(false) }
+    var selectedReason by remember { mutableStateOf("") }
+    var reportMessage by remember { mutableStateOf<String?>(null) }
+
+    val reportRepository = remember { ReportRepository() }
+
+    val reportReasons = listOf("Spam", "Harassment", "Inappropriate Content", "Other")
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -67,14 +79,84 @@ fun PostItem(
                         onDeleteClick()
                     }
                 ) {
-                    Text(
-                        text = "Delete",
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showReportDialog = false
+                selectedReason = ""
+                reportMessage = null
+            },
+            title = { Text("Report Post") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Choose a reason:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    reportReasons.forEach { reason ->
+                        TextButton(
+                            onClick = { selectedReason = reason },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (selectedReason == reason) "✓  $reason" else "    $reason",
+                                color = if (selectedReason == reason)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    reportMessage?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (selectedReason.isEmpty()) {
+                            reportMessage = "Please select a reason."
+                            return@TextButton
+                        }
+                        reportRepository.submitReport(post, selectedReason) { success, msg ->
+                            if (success) {
+                                reportMessage = null
+                                showReportDialog = false
+                                selectedReason = ""
+                            } else {
+                                reportMessage = msg
+                            }
+                        }
+                    }
+                ) {
+                    Text("Submit")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showReportDialog = false
+                        selectedReason = ""
+                        reportMessage = null
+                    }
+                ) {
                     Text("Cancel")
                 }
             }
@@ -142,13 +224,36 @@ fun PostItem(
                     }
                 }
 
-                if (post.userId == currentUserId) {
-                    TextButton(onClick = { showDeleteDialog = true }) {
-                        Text(
-                            text = "Delete",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (post.userId == currentUserId) {
+                        TextButton(onClick = { showDeleteDialog = true }) {
+                            Text(
+                                text = "Delete",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        Box {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More options"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Report") },
+                                    onClick = {
+                                        expanded = false
+                                        showReportDialog = true
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
