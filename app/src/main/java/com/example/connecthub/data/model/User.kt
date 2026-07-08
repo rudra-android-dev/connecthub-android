@@ -16,6 +16,10 @@ data class User(
 
     val profileImageUrl: String = "",
 
-    val blockedUsers: List<String> = emptyList()
+    val blockedUsers: List<String> = emptyList(),
+
+    val followersCount: Int = 0,
+
+    val followingCount: Int = 0
 
 )

@@ -14,4 +14,6 @@ object Constants {
 
     const val REPORTS_COLLECTION = "reports"
 
+    const val FOLLOWS_COLLECTION = "follows"
+
 }
