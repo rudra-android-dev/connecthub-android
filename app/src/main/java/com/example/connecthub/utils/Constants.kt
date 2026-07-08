@@ -12,4 +12,6 @@ object Constants {
 
     const val BOOKMARKS_COLLECTION = "bookmarks"
 
+    const val REPORTS_COLLECTION = "reports"
+
 }
