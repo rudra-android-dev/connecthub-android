@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,10 +40,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.connecthub.ui.feed.PostItem
+import com.example.connecthub.viewmodel.FollowViewModel
 import com.example.connecthub.viewmodel.UserProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -50,14 +54,26 @@ import com.google.firebase.auth.FirebaseAuth
 fun UserProfileScreen(
     uid: String,
     viewModel: UserProfileViewModel = viewModel(),
+    followViewModel: FollowViewModel = viewModel(),
     onBackClick: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val followState by followViewModel.uiState.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     val isOwnProfile = uid == currentUserId
 
     LaunchedEffect(uid) {
         viewModel.loadUserProfile(uid)
+    }
+
+    LaunchedEffect(state.user) {
+        state.user?.let { user ->
+            followViewModel.init(
+                uid = uid,
+                followersCount = user.followersCount,
+                followingCount = user.followingCount
+            )
+        }
     }
 
     Scaffold(
@@ -151,20 +167,61 @@ fun UserProfileScreen(
                                     Text(
                                         text = state.user?.bio ?: "",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center
                                     )
                                 }
 
-                                Text(
-                                    text = "Posts: ${state.posts.size}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                                // Block button — only shown on other users' profiles
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    StatColumn(
+                                        count = state.posts.size,
+                                        label = "Posts"
+                                    )
+                                    StatColumn(
+                                        count = followState.followers,
+                                        label = "Followers"
+                                    )
+                                    StatColumn(
+                                        count = followState.following,
+                                        label = "Following"
+                                    )
+                                }
+
                                 if (!isOwnProfile) {
                                     Spacer(modifier = Modifier.height(4.dp))
+
+                                    if (followState.isLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    } else if (followState.isFollowing) {
+                                        OutlinedButton(
+                                            onClick = { followViewModel.unfollowUser() },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("Following")
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = { followViewModel.followUser() },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("Follow")
+                                        }
+                                    }
+
+                                    followState.error?.let { err ->
+                                        Text(
+                                            text = err,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
 
                                     Button(
                                         onClick = { viewModel.blockUser(uid) },
@@ -221,5 +278,22 @@ fun UserProfileScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun StatColumn(count: Int, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

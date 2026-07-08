@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,8 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,7 +56,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "User Profile",
+            text = "My Profile",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold
         )
@@ -80,7 +81,6 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     if (!state.user?.profileImageUrl.isNullOrEmpty()) {
                         AsyncImage(
                             model = state.user?.profileImageUrl,
@@ -107,34 +107,45 @@ fun ProfileScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
-                        text = "Username: ${state.user?.username ?: "N/A"}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.fillMaxWidth()
+                        text = state.user?.username ?: "N/A",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
 
-                    Text(
-                        text = "Bio: ${if (state.user?.bio.isNullOrEmpty()) "No bio written yet." else state.user?.bio}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (!state.user?.bio.isNullOrEmpty()) {
+                        Text(
+                            text = state.user?.bio ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     Text(
-                        text = "Email: ${state.user?.email ?: "N/A"}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.fillMaxWidth()
+                        text = state.user?.email ?: "N/A",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    Text(
-                        text = "Posts: ${state.postCount}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        StatColumn(
+                            count = state.postCount,
+                            label = "Posts"
+                        )
+                        StatColumn(
+                            count = state.user?.followersCount ?: 0,
+                            label = "Followers"
+                        )
+                        StatColumn(
+                            count = state.user?.followingCount ?: 0,
+                            label = "Following"
+                        )
+                    }
                 }
             }
         }
