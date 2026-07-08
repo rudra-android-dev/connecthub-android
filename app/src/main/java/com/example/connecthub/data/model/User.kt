@@ -14,6 +14,8 @@ data class User(
 
     val bio: String = "",
 
-    val profileImageUrl: String = ""
+    val profileImageUrl: String = "",
+
+    val blockedUsers: List<String> = emptyList()
 
 )
