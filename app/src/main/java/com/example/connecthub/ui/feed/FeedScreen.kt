@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,8 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.connecthub.ui.components.LoadingPostItem
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.FeedViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -78,7 +79,7 @@ fun FeedScreen(
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = "Open settings"
                         )
                     }
                 }
@@ -104,17 +105,12 @@ fun FeedScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Post button disabled while loading to prevent duplicates
             Button(
                 onClick = { viewModel.createPost(postText) },
                 enabled = !state.isLoading && postText.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (state.isLoading) {
-                    Text("Posting...")
-                } else {
-                    Text("Post")
-                }
+                Text(if (state.isLoading) "Posting..." else "Post")
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -129,17 +125,39 @@ fun FeedScreen(
             }
 
             when {
+                // Skeleton loading, show 4 shimmer placeholders
                 state.isLoading && state.posts.isEmpty() -> {
-                    CircularProgressIndicator()
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        items(4) {
+                            LoadingPostItem()
+                        }
+                    }
                 }
 
                 state.posts.isEmpty() -> {
-                    Text(
-                        text = "No posts yet. Share something to get started!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 32.dp)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Nothing here yet.",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Start following people or create your first post.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
                 else -> {

@@ -1,5 +1,6 @@
 package com.example.connecthub.ui.profile
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
@@ -85,15 +88,16 @@ fun SearchUserScreen(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = null
+                        contentDescription = "Search icon"
                     )
                 },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
             state.error?.let { errorMsg ->
                 Text(
-                    text = "Error: $errorMsg",
+                    text = "Couldn't search users. Check your connection.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
@@ -119,6 +123,7 @@ fun SearchUserScreen(
                     ) {
                         Text(
                             text = "Type a username to search",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -129,10 +134,19 @@ fun SearchUserScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "No users found",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No users found.",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Try searching with a different name.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 
@@ -162,10 +176,11 @@ fun SearchUserItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(onClickLabel = "View ${user.username}'s profile") { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        )
+        ),
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -174,7 +189,7 @@ fun SearchUserItem(
             if (!user.profileImageUrl.isNullOrEmpty()) {
                 AsyncImage(
                     model = user.profileImageUrl,
-                    contentDescription = "Avatar",
+                    contentDescription = "Profile picture of ${user.username}",
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape),
@@ -184,14 +199,15 @@ fun SearchUserItem(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape)
+                        .background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.Gray
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.White
                     )
                 }
             }
@@ -201,14 +217,15 @@ fun SearchUserItem(
             Column {
                 Text(
                     text = user.username,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 if (user.bio.isNotEmpty()) {
                     Text(
                         text = user.bio,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
                     )
                 }
             }

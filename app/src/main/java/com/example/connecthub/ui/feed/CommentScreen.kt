@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.connecthub.viewmodel.CommentViewModel
 
@@ -86,7 +87,7 @@ fun CommentScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
-            state.error?.let { errorMsg ->
+            state.error?.let {
                 Text(
                     text = "Couldn't send your comment. Please try again.",
                     color = MaterialTheme.colorScheme.error,
@@ -103,10 +104,19 @@ fun CommentScreen(
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Be the first to comment.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No comments yet.",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Be the first to join the conversation.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 
@@ -145,7 +155,6 @@ fun CommentScreen(
                             commentText = ""
                         }
                     },
-                    // Disabled while loading or text is blank to prevent duplicates
                     enabled = !state.isLoading && commentText.isNotBlank()
                 ) {
                     Text(if (state.isLoading) "..." else "SEND")
