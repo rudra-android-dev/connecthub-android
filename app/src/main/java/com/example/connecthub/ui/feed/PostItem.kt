@@ -1,5 +1,7 @@
 package com.example.connecthub.ui.feed
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +50,7 @@ import coil3.compose.AsyncImage
 import com.example.connecthub.data.model.Post
 import com.example.connecthub.data.repository.ReportRepository
 import com.example.connecthub.utils.TimeUtils
+import kotlinx.coroutines.delay
 
 @Composable
 fun PostItem(
@@ -63,8 +68,22 @@ fun PostItem(
     var selectedReason by remember { mutableStateOf("") }
     var reportMessage by remember { mutableStateOf<String?>(null) }
 
-    val reportRepository = remember { ReportRepository() }
+    // Like animation state
+    val hasLiked = post.likedBy.contains(currentUserId)
+    var likeAnimTrigger by remember { mutableStateOf(false) }
+    val likeScale by animateFloatAsState(
+        targetValue = if (likeAnimTrigger) 1.35f else 1f,
+        animationSpec = spring(dampingRatio = 0.4f, stiffness = 500f),
+        label = "like_scale"
+    )
+    LaunchedEffect(likeAnimTrigger) {
+        if (likeAnimTrigger) {
+            delay(150)
+            likeAnimTrigger = false
+        }
+    }
 
+    val reportRepository = remember { ReportRepository() }
     val reportReasons = listOf("Spam", "Harassment", "Inappropriate Content", "Other")
 
     if (showDeleteDialog) {
@@ -186,7 +205,7 @@ fun PostItem(
                     if (!post.profileImageUrl.isNullOrEmpty()) {
                         AsyncImage(
                             model = post.profileImageUrl,
-                            contentDescription = "User Avatar",
+                            contentDescription = "Profile picture of ${post.username}",
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape),
@@ -238,7 +257,7 @@ fun PostItem(
                             IconButton(onClick = { expanded = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More options"
+                                    contentDescription = "More options for ${post.username}'s post"
                                 )
                             }
                             DropdownMenu(
@@ -278,15 +297,19 @@ fun PostItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                val hasLiked = post.likedBy.contains(currentUserId)
-
-                IconButton(onClick = onLikeClick) {
+                IconButton(
+                    onClick = {
+                        likeAnimTrigger = true
+                        onLikeClick()
+                    }
+                ) {
                     Icon(
                         imageVector = if (hasLiked) Icons.Default.Favorite
                         else Icons.Default.FavoriteBorder,
-                        contentDescription = "Like",
+                        contentDescription = if (hasLiked) "Unlike post" else "Like post",
                         tint = if (hasLiked) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.scale(likeScale)
                     )
                 }
                 Text(
@@ -317,7 +340,7 @@ fun PostItem(
                     Icon(
                         imageVector = if (isBookmarked) Icons.Default.Bookmark
                         else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "Bookmark",
+                        contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark post",
                         tint = if (isBookmarked) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
