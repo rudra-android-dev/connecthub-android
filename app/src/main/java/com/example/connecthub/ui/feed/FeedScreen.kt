@@ -16,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -97,51 +98,67 @@ fun FeedScreen(
                 value = postText,
                 onValueChange = { postText = it },
                 label = { Text("What's on your mind?") },
+                enabled = !state.isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Post button disabled while loading to prevent duplicates
             Button(
                 onClick = { viewModel.createPost(postText) },
+                enabled = !state.isLoading && postText.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Post")
+                if (state.isLoading) {
+                    Text("Posting...")
+                } else {
+                    Text("Post")
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (state.isLoading) {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
             state.error?.let {
-                Text(text = it)
-                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Couldn't load posts. Please check your connection.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            if (state.posts.isEmpty()) {
-                Text(
-                    text = "No posts yet. Share something to get started!",
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    items(state.posts) { post ->
-                        PostItem(
-                            post = post,
-                            currentUserId = currentUserId,
-                            isBookmarked = bookmarkState.bookmarkedPostIds.contains(post.postId),
-                            onLikeClick = { viewModel.toggleLike(post) },
-                            onDeleteClick = { viewModel.deletePost(post.postId) },
-                            onCommentClick = { onCommentClick(post.postId, post.content) },
-                            onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
-                        )
+            when {
+                state.isLoading && state.posts.isEmpty() -> {
+                    CircularProgressIndicator()
+                }
+
+                state.posts.isEmpty() -> {
+                    Text(
+                        text = "No posts yet. Share something to get started!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 32.dp)
+                    )
+                }
+
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        items(state.posts) { post ->
+                            PostItem(
+                                post = post,
+                                currentUserId = currentUserId,
+                                isBookmarked = bookmarkState.bookmarkedPostIds.contains(post.postId),
+                                onLikeClick = { viewModel.toggleLike(post) },
+                                onDeleteClick = { viewModel.deletePost(post.postId) },
+                                onCommentClick = { onCommentClick(post.postId, post.content) },
+                                onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
+                            )
+                        }
                     }
                 }
             }

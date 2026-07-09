@@ -64,6 +64,21 @@ fun BookmarkScreen(
                 }
             }
 
+            state.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Couldn't load bookmarks. Please try again.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             state.posts.isEmpty() -> {
                 Box(
                     modifier = Modifier

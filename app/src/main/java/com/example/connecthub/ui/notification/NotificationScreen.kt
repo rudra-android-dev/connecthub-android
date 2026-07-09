@@ -74,6 +74,21 @@ fun NotificationScreen(
                 }
             }
 
+            state.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Couldn't load notifications. Check your connection.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             state.notifications.isEmpty() -> {
                 Box(
                     modifier = Modifier
