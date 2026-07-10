@@ -5,14 +5,21 @@ import com.example.connecthub.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * Manages authentication state for Login and Register screens.
+ *
+ * Delegates all Firebase Auth operations to AuthRepository.
+ * Exposes AuthUiState via StateFlow for the UI to observe.
+ *
+ * Local validation (empty fields, password length) is handled
+ * here before any network call is made.
+ */
 class AuthViewModel : ViewModel() {
 
     private val repository = AuthRepository()
 
     private val _authState = MutableStateFlow(AuthUiState())
-
     val authState = _authState.asStateFlow()
-
 
     fun register(username: String, email: String, password: String) {
         if (username.isBlank()) {
@@ -35,7 +42,6 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-
         _authState.value = AuthUiState(isLoading = true)
 
         repository.registerUser(username, email, password) { success, message ->
@@ -46,7 +52,6 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
-
 
     fun login(email: String, password: String) {
         if (email.isBlank()) {
@@ -59,7 +64,6 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-
         _authState.value = AuthUiState(isLoading = true)
 
         repository.loginUser(email, password) { success, message ->
@@ -71,7 +75,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-
     fun logout() {
         repository.logout()
     }
@@ -79,7 +82,6 @@ class AuthViewModel : ViewModel() {
     fun isUserLoggedIn(): Boolean {
         return repository.currentUser() != null
     }
-
 
     fun resetState() {
         _authState.value = AuthUiState()
