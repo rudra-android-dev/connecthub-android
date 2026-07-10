@@ -6,10 +6,28 @@ import com.example.connecthub.utils.Constants
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
+/**
+ * Handles user profile lookups and user search.
+ *
+ * Search uses a usernameLower field (stored on registration)
+ * with a Firestore range query for prefix matching.
+ * This makes search case-insensitive without loading all users.
+ *
+ * Requires a Firestore index on usernameLower (ASC).
+ */
 class ProfileRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
 
+    /**
+     * Performs a real-time prefix search on usernameLower.
+     *
+     * Example: query "ru" matches "rudra", "ruby", "russell"
+     * The \uf8ff character is the highest Unicode code point,
+     * so quereLower + "\uf8ff" acts as an upper bound for the prefix.
+     *
+     * Skips documents where usernameLower is blank (pre-migration accounts).
+     */
     fun searchUsers(
         query: String,
         onResult: (List<User>) -> Unit,
@@ -54,6 +72,11 @@ class ProfileRepository {
             }
     }
 
+    /**
+     * Returns all posts by a given user, sorted client-side by createdAt DESC.
+     * No orderBy() is used here to avoid requiring a composite Firestore index
+     * on userId + createdAt.
+     */
     fun getUserPosts(
         uid: String,
         onResult: (List<Post>) -> Unit

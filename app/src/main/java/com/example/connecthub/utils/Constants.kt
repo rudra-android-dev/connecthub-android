@@ -1,5 +1,15 @@
 package com.example.connecthub.utils
 
+/**
+ * Firestore collection name constants.
+ *
+ * Centralising these prevents typos when referencing collections
+ * across multiple repositories.
+ *
+ * Current Firestore structure:
+ *   users / posts / comments / notifications /
+ *   bookmarks / reports / follows
+ */
 object Constants {
 
     const val USERS_COLLECTION = "users"

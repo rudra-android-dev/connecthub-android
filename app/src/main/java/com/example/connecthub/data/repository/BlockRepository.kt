@@ -5,6 +5,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * Manages the blocked users list stored on the current user's Firestore document.
+ *
+ * Blocked UIDs are stored as an array field on the user document.
+ * FieldValue.arrayUnion and arrayRemove are used to safely add/remove
+ * values without downloading and re-uploading the entire array.
+ *
+ * Blocking only affects the blocking user's feed — the blocked user
+ * is unaware and their content is still visible to everyone else.
+ */
 class BlockRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -20,6 +30,7 @@ class BlockRepository {
             return
         }
 
+        // arrayUnion ensures no duplicate entries even if called multiple times
         firestore
             .collection(Constants.USERS_COLLECTION)
             .document(currentUid)
@@ -46,6 +57,11 @@ class BlockRepository {
             .addOnFailureListener { onResult(false, it.message) }
     }
 
+    /**
+     * Returns the list of UIDs blocked by the current user.
+     * Called before the feed listener starts so blocked users'
+     * posts can be filtered out client-side.
+     */
     fun getBlockedUsers(
         onResult: (List<String>) -> Unit
     ) {

@@ -8,12 +8,27 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
+/**
+ * Handles all post-related Firestore operations.
+ *
+ * Responsibilities:
+ * - Creating and deleting posts
+ * - Listening to the real-time post feed
+ * - Toggling likes via atomic Firestore transactions
+ * - Triggering LIKE notifications
+ * - Counting posts for the current user's profile
+ */
 class FeedRepository {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val notificationRepository = NotificationRepository()
 
+    /**
+     * Creates a new post document in Firestore.
+     * Fetches the current user's profile first to attach
+     * username and profileImageUrl to the post.
+     */
     fun createPost(
         content: String,
         onResult: (Boolean, String?) -> Unit
@@ -58,6 +73,13 @@ class FeedRepository {
             .addOnFailureListener { exception -> onResult(false, exception.message) }
     }
 
+    /**
+     * Attaches a real-time Firestore snapshot listener to the posts collection.
+     * Returns the ListenerRegistration so it can be removed in ViewModel.onCleared()
+     * to prevent memory leaks.
+     *
+     * Posts are ordered newest first.
+     */
     fun listenForPosts(
         onPostsChanged: (List<Post>) -> Unit,
         onError: (String?) -> Unit
@@ -79,6 +101,15 @@ class FeedRepository {
             }
     }
 
+    /**
+     * Toggles a like on a post using a Firestore transaction.
+     * Using a transaction prevents race conditions when multiple users
+     * like the same post simultaneously.
+     *
+     * Only sends a LIKE notification when actually liking — not when un-liking.
+     * Never sends a notification if the user likes their own post
+     * (handled inside NotificationRepository).
+     */
     fun toggleLike(
         post: Post,
         onResult: (Boolean, String?) -> Unit
@@ -93,7 +124,6 @@ class FeedRepository {
             .collection(Constants.POSTS_COLLECTION)
             .document(post.postId)
 
-        // Load current user's username for notification
         firestore.collection(Constants.USERS_COLLECTION)
             .document(currentUser.uid)
             .get()
@@ -111,7 +141,6 @@ class FeedRepository {
                         likedUsers.remove(currentUser.uid)
                     } else {
                         likedUsers.add(currentUser.uid)
-                        // Send notification when liking (not un-liking)
                         notificationRepository.createNotification(
                             receiverId = currentPost.userId,
                             senderId = currentUser.uid,
@@ -147,6 +176,11 @@ class FeedRepository {
             .addOnFailureListener { exception -> onResult(false, exception.message) }
     }
 
+    /**
+     * Returns the number of posts created by the current user.
+     * Used to display the post count on the profile screen.
+     * Firestore does the filtering server-side via whereEqualTo.
+     */
     fun getUserPostCount(onResult: (Int) -> Unit) {
         val currentUser = auth.currentUser
         if (currentUser == null) {

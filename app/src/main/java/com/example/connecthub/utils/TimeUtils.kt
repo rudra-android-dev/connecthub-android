@@ -1,5 +1,17 @@
 package com.example.connecthub.utils
 
+/**
+ * Utility for converting timestamps into user-friendly relative time strings.
+ *
+ * Examples:
+ *   < 1 minute  → "Just now"
+ *   5 minutes   → "5 min ago"
+ *   3 hours     → "3 hr ago"
+ *   1 day       → "Yesterday"
+ *   5 days      → "5 days ago"
+ *
+ * Used in PostItem, CommentItem, and NotificationItem.
+ */
 object TimeUtils {
 
     fun formatRelativeTime(time: Long): String {

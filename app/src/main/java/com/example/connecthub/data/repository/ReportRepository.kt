@@ -6,6 +6,16 @@ import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * Handles post reporting.
+ *
+ * Reports are write-only for regular users — Firestore security rules
+ * prevent any user from reading the reports collection.
+ * Only an admin dashboard would have read access.
+ *
+ * A duplicate check is performed before saving to prevent the same
+ * user from submitting multiple reports for the same post.
+ */
 class ReportRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -22,7 +32,7 @@ class ReportRepository {
             return
         }
 
-        // Duplicate check: has this user already reported this post?
+        // Prevent duplicate reports from the same user on the same post
         firestore
             .collection(Constants.REPORTS_COLLECTION)
             .whereEqualTo("postId", post.postId)

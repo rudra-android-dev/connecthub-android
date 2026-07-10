@@ -6,6 +6,13 @@ import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * Handles saving and retrieving bookmarked posts.
+ *
+ * Each bookmark is a separate Firestore document containing
+ * the userId and postId. Posts are then fetched individually
+ * by their IDs and sorted client-side.
+ */
 class BookmarkRepository {
 
     private val auth = FirebaseAuth.getInstance()
@@ -40,6 +47,10 @@ class BookmarkRepository {
             .addOnFailureListener { onResult(false, it.message) }
     }
 
+    /**
+     * Removes a bookmark by querying for a document matching
+     * userId + postId, then deleting it.
+     */
     fun removeBookmark(
         postId: String,
         onResult: (Boolean, String?) -> Unit
@@ -71,6 +82,11 @@ class BookmarkRepository {
             .addOnFailureListener { onResult(false, it.message) }
     }
 
+    /**
+     * Returns just the postIds the current user has bookmarked.
+     * Used by FeedScreen to show the filled bookmark icon
+     * without loading full post data.
+     */
     fun getBookmarkedPostIds(
         onResult: (List<String>) -> Unit,
         onError: (String?) -> Unit
@@ -94,6 +110,12 @@ class BookmarkRepository {
             .addOnFailureListener { onError(it.message) }
     }
 
+    /**
+     * Returns the full Post objects for all bookmarked posts.
+     * Fetches each post individually by ID since Firestore
+     * does not support IN queries on dynamic lists efficiently
+     * at this project scale.
+     */
     fun getBookmarks(
         onResult: (List<Post>) -> Unit,
         onError: (String?) -> Unit

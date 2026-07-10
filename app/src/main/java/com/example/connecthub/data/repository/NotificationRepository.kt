@@ -6,10 +6,24 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
+/**
+ * Handles all notification-related Firestore operations.
+ *
+ * Notifications are created by FeedRepository (likes) and
+ * CommentRepository (comments). This repository is NOT
+ * responsible for deciding when to notify — it only creates,
+ * reads, and marks notifications.
+ */
 class NotificationRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
 
+    /**
+     * Creates a notification document in Firestore.
+     *
+     * The self-notification guard (receiverId == senderId) ensures
+     * users are never notified about their own actions.
+     */
     fun createNotification(
         receiverId: String,
         senderId: String,
@@ -40,6 +54,13 @@ class NotificationRepository {
             .set(notification)
     }
 
+    /**
+     * Listens for all notifications for the current user in real time.
+     * Ordered newest first.
+     *
+     * Requires a Firestore composite index on:
+     * receiverId (ASC) + createdAt (DESC)
+     */
     fun listenForNotifications(
         receiverId: String,
         onResult: (List<Notification>) -> Unit,
@@ -63,6 +84,10 @@ class NotificationRepository {
             }
     }
 
+    /**
+     * Marks all unread notifications for a user as read in a single batch write.
+     * Called when the user opens the notifications screen.
+     */
     fun markAllAsRead(receiverId: String) {
         firestore
             .collection(Constants.NOTIFICATIONS_COLLECTION)

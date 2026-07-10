@@ -10,12 +10,30 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
+/**
+ * Handles all comment-related Firestore operations.
+ *
+ * Responsibilities:
+ * - Adding comments to posts
+ * - Incrementing the post's commentCount atomically
+ * - Triggering COMMENT notifications to the post owner
+ * - Listening to real-time comment updates for a given post
+ */
 class CommentRepository {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val notificationRepository = NotificationRepository()
 
+    /**
+     * Adds a new comment to a post.
+     *
+     * Flow:
+     * 1. Fetch current user profile (for username and avatar)
+     * 2. Save comment document
+     * 3. Increment post's commentCount with FieldValue.increment (atomic)
+     * 4. Notify the post owner via NotificationRepository
+     */
     fun addComment(
         postId: String,
         content: String,
@@ -51,6 +69,7 @@ class CommentRepository {
 
                 commentRef.set(newComment)
                     .addOnSuccessListener {
+                        // Atomic increment no race condition risk
                         firestore.collection(Constants.POSTS_COLLECTION)
                             .document(postId)
                             .update("commentCount", FieldValue.increment(1))
@@ -82,6 +101,13 @@ class CommentRepository {
             }
     }
 
+    /**
+     * Attaches a real-time listener to comments for a specific post.
+     * Returns ListenerRegistration so it can be removed in ViewModel.onCleared()
+     * to prevent memory leaks.
+     *
+     * Comments are ordered oldest first (chronological conversation order).
+     */
     fun listenForComments(
         postId: String,
         onCommentsChanged: (List<Comment>) -> Unit,
