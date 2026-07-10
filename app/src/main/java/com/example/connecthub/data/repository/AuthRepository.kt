@@ -5,6 +5,13 @@ import com.example.connecthub.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * Handles all authentication operations.
+ *
+ * This is the only layer that communicates directly with
+ * Firebase Authentication and creates the initial user
+ * document in Firestore on registration.
+ */
 class AuthRepository {
 
     private val auth = FirebaseAuth.getInstance()
@@ -49,10 +56,6 @@ class AuthRepository {
     }
 
     fun currentUser() = auth.currentUser
-
-    fun logoutUser() = logout()
-    fun isUserLoggedIn(): Boolean = auth.currentUser != null
-    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     private fun saveUserToFirestore(
         uid: String,
