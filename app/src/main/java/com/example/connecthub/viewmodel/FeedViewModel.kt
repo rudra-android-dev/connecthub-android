@@ -61,7 +61,6 @@ class FeedViewModel : ViewModel() {
 
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-        // Load blocked users first, then start listener
         blockRepository.getBlockedUsers { blockedIds ->
             _uiState.value = _uiState.value.copy(
                 blockedUserIds = blockedIds.toSet()
@@ -84,6 +83,28 @@ class FeedViewModel : ViewModel() {
                         isLoading = false
                     )
                 }
+            )
+
+            if (postsListener == null) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
+        }
+    }
+
+    /**
+     * Called after the user blocks someone from UserProfileScreen.
+     * Refreshes the blocked list and re-filters the current posts immediately
+     * so blocked posts disappear without requiring an app restart.
+     */
+    fun refreshBlockedUsers() {
+        blockRepository.getBlockedUsers { blockedIds ->
+            val newBlockedSet = blockedIds.toSet()
+            val filtered = _uiState.value.posts.filter { post ->
+                !newBlockedSet.contains(post.userId)
+            }
+            _uiState.value = _uiState.value.copy(
+                blockedUserIds = newBlockedSet,
+                posts = filtered
             )
         }
     }

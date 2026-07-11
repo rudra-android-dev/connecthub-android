@@ -36,11 +36,45 @@ class UserProfileViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Checks whether the current user has blocked this profile's user.
+     * Sets isBlocked so the UI can toggle between Block / Unblock correctly.
+     */
+    fun checkIsBlocked(uid: String) {
+        blockRepository.getBlockedUsers { blockedIds ->
+            _uiState.value = _uiState.value.copy(
+                isBlocked = blockedIds.contains(uid)
+            )
+        }
+    }
+
     fun blockUser(uid: String) {
         blockRepository.blockUser(uid) { success, message ->
-            _uiState.value = _uiState.value.copy(
-                blockMessage = if (success) "User blocked." else message
-            )
+            if (success) {
+                _uiState.value = _uiState.value.copy(
+                    isBlocked = true,
+                    blockMessage = "User blocked."
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    blockMessage = message
+                )
+            }
+        }
+    }
+
+    fun unblockUser(uid: String) {
+        blockRepository.unblockUser(uid) { success, message ->
+            if (success) {
+                _uiState.value = _uiState.value.copy(
+                    isBlocked = false,
+                    blockMessage = "User unblocked."
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    blockMessage = message
+                )
+            }
         }
     }
 }
