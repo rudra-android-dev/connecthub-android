@@ -34,6 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,8 +47,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import com.example.connecthub.data.model.Post
 import com.example.connecthub.ui.feed.PostItem
+import com.example.connecthub.ui.feed.ReportDialog
 import com.example.connecthub.viewmodel.FollowViewModel
+import com.example.connecthub.viewmodel.ReportViewModel
 import com.example.connecthub.viewmodel.UserProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -55,15 +61,22 @@ fun UserProfileScreen(
     uid: String,
     viewModel: UserProfileViewModel = viewModel(),
     followViewModel: FollowViewModel = viewModel(),
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCommentClick: (String, String) -> Unit = { _, _ -> },
+    onBlockSuccess: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val followState by followViewModel.uiState.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     val isOwnProfile = uid == currentUserId
 
+    // Report dialog state
+    var reportingPost by remember { mutableStateOf<Post?>(null) }
+    val reportViewModel: ReportViewModel = viewModel()
+
     LaunchedEffect(uid) {
         viewModel.loadUserProfile(uid)
+        viewModel.checkIsBlocked(uid)
     }
 
     LaunchedEffect(state.user) {
@@ -74,6 +87,18 @@ fun UserProfileScreen(
                 followingCount = user.followingCount
             )
         }
+    }
+
+    LaunchedEffect(state.isBlocked) {
+        onBlockSuccess()
+    }
+
+    reportingPost?.let { post ->
+        ReportDialog(
+            post = post,
+            onDismiss = { reportingPost = null },
+            viewModel = reportViewModel
+        )
     }
 
     Scaffold(
@@ -178,27 +203,16 @@ fun UserProfileScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    StatColumn(
-                                        count = state.posts.size,
-                                        label = "Posts"
-                                    )
-                                    StatColumn(
-                                        count = followState.followers,
-                                        label = "Followers"
-                                    )
-                                    StatColumn(
-                                        count = followState.following,
-                                        label = "Following"
-                                    )
+                                    StatColumn(count = state.posts.size, label = "Posts")
+                                    StatColumn(count = followState.followers, label = "Followers")
+                                    StatColumn(count = followState.following, label = "Following")
                                 }
 
                                 if (!isOwnProfile) {
                                     Spacer(modifier = Modifier.height(4.dp))
 
                                     if (followState.isLoading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(32.dp)
-                                        )
+                                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
                                     } else if (followState.isFollowing) {
                                         OutlinedButton(
                                             onClick = { followViewModel.unfollowUser() },
@@ -223,14 +237,26 @@ fun UserProfileScreen(
                                         )
                                     }
 
-                                    Button(
-                                        onClick = { viewModel.blockUser(uid) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Block User")
+                                    if (state.isBlocked) {
+                                        OutlinedButton(
+                                            onClick = { viewModel.unblockUser(uid) },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            )
+                                        ) {
+                                            Text("Unblock User")
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = { viewModel.blockUser(uid) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("Block User")
+                                        }
                                     }
 
                                     state.blockMessage?.let { msg ->
@@ -271,7 +297,8 @@ fun UserProfileScreen(
                                 currentUserId = currentUserId,
                                 onLikeClick = {},
                                 onDeleteClick = {},
-                                onCommentClick = {}
+                                onCommentClick = { onCommentClick(post.postId, post.content) },
+                                onReportClick = { reportingPost = it }
                             )
                         }
                     }

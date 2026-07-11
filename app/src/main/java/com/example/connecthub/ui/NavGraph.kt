@@ -1,5 +1,6 @@
 package com.example.connecthub.ui
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -21,6 +22,7 @@ import com.example.connecthub.ui.settings.SettingsScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
+import com.example.connecthub.viewmodel.FeedViewModel
 import com.example.connecthub.viewmodel.FollowViewModel
 import com.example.connecthub.viewmodel.NotificationViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
@@ -73,8 +75,10 @@ fun NavGraph(
         }
 
         composable("feed") {
+            val feedViewModel: FeedViewModel = viewModel()
             val bookmarkViewModel: BookmarkViewModel = viewModel()
             FeedScreen(
+                viewModel = feedViewModel,
                 bookmarkViewModel = bookmarkViewModel,
                 onLogoutClick = {
                     authViewModel.logout()
@@ -83,7 +87,8 @@ fun NavGraph(
                     }
                 },
                 onCommentClick = { postId, postText ->
-                    navController.navigate("comment/$postId?postText=$postText")
+                    val encoded = Uri.encode(postText)
+                    navController.navigate("comment/$postId?postText=$encoded")
                 },
                 onProfileClick = {
                     navController.navigate("profile")
@@ -126,7 +131,8 @@ fun NavGraph(
                 viewModel = bookmarkViewModel,
                 onBackClick = { navController.popBackStack() },
                 onCommentClick = { postId, postText ->
-                    navController.navigate("comment/$postId?postText=$postText")
+                    val encoded = Uri.encode(postText)
+                    navController.navigate("comment/$postId?postText=$encoded")
                 }
             )
         }
@@ -159,11 +165,20 @@ fun NavGraph(
             val uid = backStackEntry.arguments?.getString("uid").orEmpty()
             val userProfileViewModel: UserProfileViewModel = viewModel()
             val followViewModel: FollowViewModel = viewModel()
+            val feedViewModel: FeedViewModel = viewModel()
             UserProfileScreen(
                 uid = uid,
                 viewModel = userProfileViewModel,
                 followViewModel = followViewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onCommentClick = { postId, postText ->
+                    val encoded = Uri.encode(postText)
+                    navController.navigate("comment/$postId?postText=$encoded")
+                },
+                onBlockSuccess = {
+                    // Refresh feed so blocked user's posts disappear immediately
+                    feedViewModel.refreshBlockedUsers()
+                }
             )
         }
 

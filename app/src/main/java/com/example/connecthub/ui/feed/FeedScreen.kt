@@ -32,9 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.connecthub.data.model.Post
 import com.example.connecthub.ui.components.LoadingPostItem
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.FeedViewModel
+import com.example.connecthub.viewmodel.ReportViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +61,9 @@ fun FeedScreen(
         FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     }
 
+    var reportingPost by remember { mutableStateOf<Post?>(null) }
+    val reportViewModel: ReportViewModel = viewModel()
+
     LaunchedEffect(Unit) {
         viewModel.startListeningToPosts()
         bookmarkViewModel.loadBookmarkedPostIds()
@@ -69,6 +74,14 @@ fun FeedScreen(
             postText = ""
             viewModel.resetSuccess()
         }
+    }
+
+    reportingPost?.let { post ->
+        ReportDialog(
+            post = post,
+            onDismiss = { reportingPost = null },
+            viewModel = reportViewModel
+        )
     }
 
     Scaffold(
@@ -125,16 +138,13 @@ fun FeedScreen(
             }
 
             when {
-                // Skeleton loading, show 4 shimmer placeholders
                 state.isLoading && state.posts.isEmpty() -> {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
                     ) {
-                        items(4) {
-                            LoadingPostItem()
-                        }
+                        items(4) { LoadingPostItem() }
                     }
                 }
 
@@ -174,7 +184,8 @@ fun FeedScreen(
                                 onLikeClick = { viewModel.toggleLike(post) },
                                 onDeleteClick = { viewModel.deletePost(post.postId) },
                                 onCommentClick = { onCommentClick(post.postId, post.content) },
-                                onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) }
+                                onBookmarkClick = { bookmarkViewModel.toggleBookmark(post.postId) },
+                                onReportClick = { reportingPost = it }
                             )
                         }
                     }
@@ -183,46 +194,31 @@ fun FeedScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = onNotificationsClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onNotificationsClick, modifier = Modifier.fillMaxWidth()) {
                 Text("🔔 Notifications")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onBookmarksClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onBookmarksClick, modifier = Modifier.fillMaxWidth()) {
                 Text("🔖 Bookmarks")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onSearchClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onSearchClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Search Users")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onProfileClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onProfileClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Go to Profile")
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onLogoutClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onLogoutClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Logout")
             }
         }
