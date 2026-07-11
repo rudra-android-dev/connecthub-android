@@ -35,12 +35,16 @@ class ProfileViewModel : ViewModel() {
 
         profileRepository.getUserByUid(currentUser.uid) { userData ->
             feedRepository.getUserPostCount { count ->
-                _uiState.value = ProfileUiState(
-                    user = userData,
-                    postCount = count,
-                    isLoading = false,
-                    error = if (userData == null) "User data not found." else null
-                )
+
+                profileRepository.getUserPosts(currentUser.uid) { posts ->
+                    _uiState.value = ProfileUiState(
+                        user = userData,
+                        postCount = count,
+                        userPosts = posts,
+                        isLoading = false,
+                        error = if (userData == null) "User data not found." else null
+                    )
+                }
             }
         }
     }

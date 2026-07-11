@@ -50,6 +50,7 @@ import coil3.compose.AsyncImage
 import com.example.connecthub.data.model.Post
 import com.example.connecthub.utils.TimeUtils
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun PostItem(
@@ -74,7 +75,7 @@ fun PostItem(
     )
     LaunchedEffect(likeAnimTrigger) {
         if (likeAnimTrigger) {
-            delay(150)
+            delay(150.milliseconds)
             likeAnimTrigger = false
         }
     }
@@ -122,7 +123,7 @@ fun PostItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (!post.profileImageUrl.isNullOrEmpty()) {
+                    if (post.profileImageUrl.isNotEmpty()) {
                         AsyncImage(
                             model = post.profileImageUrl,
                             contentDescription = "Profile picture of ${post.username}",

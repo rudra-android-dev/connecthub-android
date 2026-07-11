@@ -241,7 +241,7 @@ fun UserProfileScreen(
                                         OutlinedButton(
                                             onClick = { viewModel.unblockUser(uid) },
                                             modifier = Modifier.fillMaxWidth(),
-                                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                            colors = ButtonDefaults.outlinedButtonColors(
                                                 contentColor = MaterialTheme.colorScheme.error
                                             )
                                         ) {

@@ -84,10 +84,6 @@ class FeedViewModel : ViewModel() {
                     )
                 }
             )
-
-            if (postsListener == null) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
-            }
         }
     }
 
