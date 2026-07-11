@@ -50,7 +50,6 @@ class BookmarkViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     bookmarkedPostIds = _uiState.value.bookmarkedPostIds + postId
                 )
-                loadBookmarks()
             }
         }
     }

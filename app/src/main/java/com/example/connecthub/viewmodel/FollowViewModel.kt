@@ -20,11 +20,12 @@ class FollowViewModel : ViewModel() {
             followers = followersCount,
             following = followingCount
         )
-        checkFollowing(uid)
+        checkFollowing()
     }
 
-    fun checkFollowing(uid: String) {
-        repository.isFollowing(uid) { following ->
+    // Private, only called internally from init()
+    private fun checkFollowing() {
+        repository.isFollowing(targetUid) { following ->
             _uiState.value = _uiState.value.copy(isFollowing = following)
         }
     }
