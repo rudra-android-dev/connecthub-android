@@ -48,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.connecthub.data.model.Post
-import com.example.connecthub.data.repository.ReportRepository
 import com.example.connecthub.utils.TimeUtils
 import kotlinx.coroutines.delay
 
@@ -60,15 +59,12 @@ fun PostItem(
     onLikeClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onCommentClick: () -> Unit,
-    onBookmarkClick: () -> Unit = {}
+    onBookmarkClick: () -> Unit = {},
+    onReportClick: (Post) -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    var showReportDialog by remember { mutableStateOf(false) }
-    var selectedReason by remember { mutableStateOf("") }
-    var reportMessage by remember { mutableStateOf<String?>(null) }
 
-    // Like animation state
     val hasLiked = post.likedBy.contains(currentUserId)
     var likeAnimTrigger by remember { mutableStateOf(false) }
     val likeScale by animateFloatAsState(
@@ -82,9 +78,6 @@ fun PostItem(
             likeAnimTrigger = false
         }
     }
-
-    val reportRepository = remember { ReportRepository() }
-    val reportReasons = listOf("Spam", "Harassment", "Inappropriate Content", "Other")
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -103,79 +96,6 @@ fun PostItem(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showReportDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showReportDialog = false
-                selectedReason = ""
-                reportMessage = null
-            },
-            title = { Text("Report Post") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Choose a reason:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    reportReasons.forEach { reason ->
-                        TextButton(
-                            onClick = { selectedReason = reason },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = if (selectedReason == reason) "✓  $reason" else "    $reason",
-                                color = if (selectedReason == reason)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                    reportMessage?.let {
-                        Text(
-                            text = it,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (selectedReason.isEmpty()) {
-                            reportMessage = "Please select a reason."
-                            return@TextButton
-                        }
-                        reportRepository.submitReport(post, selectedReason) { success, msg ->
-                            if (success) {
-                                reportMessage = null
-                                showReportDialog = false
-                                selectedReason = ""
-                            } else {
-                                reportMessage = msg
-                            }
-                        }
-                    }
-                ) {
-                    Text("Submit")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showReportDialog = false
-                        selectedReason = ""
-                        reportMessage = null
-                    }
-                ) {
                     Text("Cancel")
                 }
             }
@@ -268,7 +188,7 @@ fun PostItem(
                                     text = { Text("Report") },
                                     onClick = {
                                         expanded = false
-                                        showReportDialog = true
+                                        onReportClick(post)
                                     }
                                 )
                             }
