@@ -8,21 +8,16 @@ import com.google.firebase.firestore.Query
 
 /**
  * Handles all notification-related Firestore operations.
- *
- * Notifications are created by FeedRepository (likes) and
- * CommentRepository (comments). This repository is NOT
- * responsible for deciding when to notify — it only creates,
- * reads, and marks notifications.
  */
 class NotificationRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
 
     /**
-     * Creates a notification document in Firestore.
-     *
-     * The self-notification guard (receiverId == senderId) ensures
-     * users are never notified about their own actions.
+     * Creates a notification document.
+     * Self notification guard: users are never notified about their own actions.
+     * Duplicate LIKE guard: if a LIKE notification already exists from this
+     * sender on this post, a second one is not created (handles like→unlike→like).
      */
     fun createNotification(
         receiverId: String,
@@ -31,9 +26,31 @@ class NotificationRepository {
         type: String,
         postId: String
     ) {
-        // Never notify someone about their own action
         if (receiverId == senderId) return
 
+        if (type == "LIKE") {
+            // Check for existing LIKE notification before creating a duplicate
+            firestore.collection(Constants.NOTIFICATIONS_COLLECTION)
+                .whereEqualTo("postId", postId)
+                .whereEqualTo("senderId", senderId)
+                .whereEqualTo("type", "LIKE")
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    if (!snapshot.isEmpty) return@addOnSuccessListener
+                    saveNotification(receiverId, senderId, senderUsername, type, postId)
+                }
+        } else {
+            saveNotification(receiverId, senderId, senderUsername, type, postId)
+        }
+    }
+
+    private fun saveNotification(
+        receiverId: String,
+        senderId: String,
+        senderUsername: String,
+        type: String,
+        postId: String
+    ) {
         val notificationId = firestore
             .collection(Constants.NOTIFICATIONS_COLLECTION)
             .document()
@@ -54,13 +71,6 @@ class NotificationRepository {
             .set(notification)
     }
 
-    /**
-     * Listens for all notifications for the current user in real time.
-     * Ordered newest first.
-     *
-     * Requires a Firestore composite index on:
-     * receiverId (ASC) + createdAt (DESC)
-     */
     fun listenForNotifications(
         receiverId: String,
         onResult: (List<Notification>) -> Unit,
@@ -84,10 +94,6 @@ class NotificationRepository {
             }
     }
 
-    /**
-     * Marks all unread notifications for a user as read in a single batch write.
-     * Called when the user opens the notifications screen.
-     */
     fun markAllAsRead(receiverId: String) {
         firestore
             .collection(Constants.NOTIFICATIONS_COLLECTION)
