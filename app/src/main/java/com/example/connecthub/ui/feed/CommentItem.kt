@@ -18,6 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,8 @@ import com.example.connecthub.utils.TimeUtils
 @Composable
 fun CommentItem(
     comment: Comment,
+    currentUserId: String = "",
+    onDeleteClick: (Comment) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -45,47 +48,64 @@ fun CommentItem(
         Column(modifier = Modifier.padding(12.dp)) {
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (!comment.profileImageUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = comment.profileImageUrl,
-                        contentDescription = "Commenter Avatar",
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.White
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (!comment.profileImageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = comment.profileImageUrl,
+                            contentDescription = "Commenter Avatar",
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(Color.LightGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = comment.username,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = TimeUtils.formatRelativeTime(comment.createdAt),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                Column {
-                    Text(
-                        text = comment.username,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = TimeUtils.formatRelativeTime(comment.createdAt),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (comment.userId == currentUserId) {
+                    TextButton(onClick = { onDeleteClick(comment) }) {
+                        Text(
+                            text = "Delete",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
 

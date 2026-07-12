@@ -22,27 +22,30 @@ class CommentViewModel : ViewModel() {
     ) {
         val text = content.trim()
         if (text.isEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                error = "Comment cannot be empty."
-            )
+            _uiState.value = _uiState.value.copy(error = "Comment cannot be empty.")
             return
         }
 
-        _uiState.value = _uiState.value.copy(
-            isLoading = true,
-            error = null
-        )
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         repository.addComment(postId, text) { success, errorMessage ->
             if (success) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false
-                )
+                _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = errorMessage ?: "Failed to post comment."
+                )
+            }
+        }
+    }
+
+    fun deleteComment(commentId: String, postId: String) {
+        repository.deleteComment(commentId, postId) { success, errorMessage ->
+            if (!success) {
+                _uiState.value = _uiState.value.copy(
+                    error = errorMessage ?: "Failed to delete comment."
                 )
             }
         }

@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.connecthub.viewmodel.CommentViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +52,7 @@ fun CommentScreen(
 
     val state by viewModel.uiState.collectAsState()
     var commentText by remember { mutableStateOf("") }
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
 
     Scaffold(
         topBar = {
@@ -128,8 +130,17 @@ fun CommentScreen(
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(state.comments) { comment ->
-                            CommentItem(comment = comment)
+                        items(
+                            items = state.comments,
+                            key = { it.commentId }
+                        ) { comment ->
+                            CommentItem(
+                                comment = comment,
+                                currentUserId = currentUserId,
+                                onDeleteClick = { c ->
+                                    viewModel.deleteComment(c.commentId, postId)
+                                }
+                            )
                         }
                     }
                 }

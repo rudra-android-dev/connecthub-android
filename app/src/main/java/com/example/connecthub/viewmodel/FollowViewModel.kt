@@ -2,28 +2,33 @@ package com.example.connecthub.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.connecthub.data.repository.FollowRepository
+import com.example.connecthub.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class FollowViewModel : ViewModel() {
 
     private val repository = FollowRepository()
+    private val profileRepository = ProfileRepository()
 
     private val _uiState = MutableStateFlow(FollowUiState())
     val uiState = _uiState.asStateFlow()
 
     private var targetUid: String = ""
 
-    fun init(uid: String, followersCount: Int, followingCount: Int) {
+    fun init(uid: String) {
+        if (targetUid == uid) return
         targetUid = uid
-        _uiState.value = _uiState.value.copy(
-            followers = followersCount,
-            following = followingCount
-        )
+        profileRepository.getUserByUid(uid) { user ->
+            _uiState.value = _uiState.value.copy(
+                followers = user?.followersCount ?: 0,
+                following = user?.followingCount ?: 0
+            )
+        }
+
         checkFollowing()
     }
 
-    // Private, only called internally from init()
     private fun checkFollowing() {
         repository.isFollowing(targetUid) { following ->
             _uiState.value = _uiState.value.copy(isFollowing = following)
