@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
@@ -37,6 +38,7 @@ fun SettingsScreen(
     darkMode: Boolean,
     onDarkModeChanged: (Boolean) -> Unit,
     onEditProfile: () -> Unit,
+    onBlockedUsers: () -> Unit,
     onLogout: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -76,7 +78,11 @@ Built With
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Text("←")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -93,70 +99,57 @@ Built With
                 ListItem(
                     headlineContent = { Text("Dark Mode") },
                     leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.DarkMode,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.DarkMode, contentDescription = null)
                     },
                     trailingContent = {
-                        Switch(
-                            checked = darkMode,
-                            onCheckedChange = onDarkModeChanged
-                        )
+                        Switch(checked = darkMode, onCheckedChange = onDarkModeChanged)
                     }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onEditProfile
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), onClick = onEditProfile) {
                 ListItem(
                     headlineContent = { Text("Edit Profile") },
                     leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.Person, contentDescription = null)
                     }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { showAbout = true }
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), onClick = onBlockedUsers) {
+                ListItem(
+                    headlineContent = { Text("Blocked Users") },
+                    leadingContent = {
+                        Icon(Icons.Default.Block, contentDescription = null)
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(modifier = Modifier.fillMaxWidth(), onClick = { showAbout = true }) {
                 ListItem(
                     headlineContent = { Text("About ConnectHub") },
                     leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.Info, contentDescription = null)
                     }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onLogout
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), onClick = onLogout) {
                 ListItem(
                     headlineContent = {
-                        Text(
-                            text = "Logout",
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text("Logout", color = MaterialTheme.colorScheme.error)
                     },
                     leadingContent = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error
                         )

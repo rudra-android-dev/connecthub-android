@@ -1,6 +1,7 @@
 package com.example.connecthub.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,6 +64,8 @@ fun UserProfileScreen(
     followViewModel: FollowViewModel = viewModel(),
     onBackClick: () -> Unit,
     onCommentClick: (String, String) -> Unit = { _, _ -> },
+    onFollowersClick: () -> Unit = {},
+    onFollowingClick: () -> Unit = {},
     onBlockSuccess: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -70,7 +73,6 @@ fun UserProfileScreen(
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
     val isOwnProfile = uid == currentUserId
 
-    // Report dialog state
     var reportingPost by remember { mutableStateOf<Post?>(null) }
     val reportViewModel: ReportViewModel = viewModel()
 
@@ -80,12 +82,8 @@ fun UserProfileScreen(
     }
 
     LaunchedEffect(state.user) {
-        state.user?.let { user ->
-            followViewModel.init(
-                uid = uid,
-                followersCount = user.followersCount,
-                followingCount = user.followingCount
-            )
+        state.user?.let {
+            followViewModel.init(uid)
         }
     }
 
@@ -116,43 +114,30 @@ fun UserProfileScreen(
         when {
             state.isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ) { CircularProgressIndicator() }
             }
 
             state.error != null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = state.error ?: "Something went wrong.",
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Text(state.error ?: "Something went wrong.", color = MaterialTheme.colorScheme.error)
                 }
             }
 
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
+                                modifier = Modifier.fillMaxWidth().padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
@@ -160,33 +145,19 @@ fun UserProfileScreen(
                                     AsyncImage(
                                         model = state.user?.profileImageUrl,
                                         contentDescription = "Profile Picture",
-                                        modifier = Modifier
-                                            .size(96.dp)
-                                            .clip(CircleShape),
+                                        modifier = Modifier.size(96.dp).clip(CircleShape),
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
                                     Box(
-                                        modifier = Modifier
-                                            .size(96.dp)
-                                            .clip(CircleShape)
-                                            .background(Color.LightGray),
+                                        modifier = Modifier.size(96.dp).clip(CircleShape).background(Color.LightGray),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(48.dp),
-                                            tint = Color.White
-                                        )
+                                        Icon(Icons.Default.Person, null, modifier = Modifier.size(48.dp), tint = Color.White)
                                     }
                                 }
 
-                                Text(
-                                    text = state.user?.username ?: "",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text(state.user?.username ?: "", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                                 if (!state.user?.bio.isNullOrEmpty()) {
                                     Text(
@@ -203,9 +174,21 @@ fun UserProfileScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    StatColumn(count = state.posts.size, label = "Posts")
-                                    StatColumn(count = followState.followers, label = "Followers")
-                                    StatColumn(count = followState.following, label = "Following")
+                                    ClickableStatColumn(
+                                        count = state.posts.size,
+                                        label = "Posts",
+                                        onClick = null
+                                    )
+                                    ClickableStatColumn(
+                                        count = followState.followers,
+                                        label = "Followers",
+                                        onClick = onFollowersClick
+                                    )
+                                    ClickableStatColumn(
+                                        count = followState.following,
+                                        label = "Following",
+                                        onClick = onFollowingClick
+                                    )
                                 }
 
                                 if (!isOwnProfile) {
@@ -217,54 +200,34 @@ fun UserProfileScreen(
                                         OutlinedButton(
                                             onClick = { followViewModel.unfollowUser() },
                                             modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text("Following")
-                                        }
+                                        ) { Text("Following") }
                                     } else {
                                         Button(
                                             onClick = { followViewModel.followUser() },
                                             modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text("Follow")
-                                        }
+                                        ) { Text("Follow") }
                                     }
 
-                                    followState.error?.let { err ->
-                                        Text(
-                                            text = err,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
+                                    followState.error?.let {
+                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                                     }
 
                                     if (state.isBlocked) {
                                         OutlinedButton(
                                             onClick = { viewModel.unblockUser(uid) },
                                             modifier = Modifier.fillMaxWidth(),
-                                            colors = ButtonDefaults.outlinedButtonColors(
-                                                contentColor = MaterialTheme.colorScheme.error
-                                            )
-                                        ) {
-                                            Text("Unblock User")
-                                        }
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                        ) { Text("Unblock User") }
                                     } else {
                                         Button(
                                             onClick = { viewModel.blockUser(uid) },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.error
-                                            ),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                                             modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text("Block User")
-                                        }
+                                        ) { Text("Block User") }
                                     }
 
-                                    state.blockMessage?.let { msg ->
-                                        Text(
-                                            text = msg,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                    state.blockMessage?.let {
+                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
@@ -272,23 +235,14 @@ fun UserProfileScreen(
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(4.dp))
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Posts",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Posts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     }
 
                     if (state.posts.isEmpty()) {
                         item {
-                            Text(
-                                text = "No posts yet.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
+                            Text("No posts yet.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
                         }
                     } else {
                         items(state.posts) { post ->
@@ -309,8 +263,14 @@ fun UserProfileScreen(
 }
 
 @Composable
-fun StatColumn(count: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun ClickableStatColumn(count: Int, label: String, onClick: (() -> Unit)?) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = if (onClick != null)
+            Modifier.clickable { onClick() }.padding(8.dp)
+        else
+            Modifier.padding(8.dp)
+    ) {
         Text(
             text = count.toString(),
             style = MaterialTheme.typography.titleMedium,
@@ -323,4 +283,10 @@ fun StatColumn(count: Int, label: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+// Keep StatColumn for ProfileScreen compatibility
+@Composable
+fun StatColumn(count: Int, label: String) {
+    ClickableStatColumn(count = count, label = label, onClick = null)
 }

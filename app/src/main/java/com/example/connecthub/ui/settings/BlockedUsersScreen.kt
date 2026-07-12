@@ -1,7 +1,6 @@
-package com.example.connecthub.ui.profile
+package com.example.connecthub.ui.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -41,32 +41,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.connecthub.data.model.User
-import com.example.connecthub.viewmodel.FollowListViewModel
+import com.example.connecthub.viewmodel.BlockedUsersViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FollowListScreen(
-    uid: String,
-    type: String,
+fun BlockedUsersScreen(
     onBackClick: () -> Unit,
-    onUserClick: (String) -> Unit,
-    viewModel: FollowListViewModel = viewModel()
+    viewModel: BlockedUsersViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    val title = if (type == "followers") "Followers" else "Following"
 
-    LaunchedEffect(uid, type) {
-        if (type == "followers") {
-            viewModel.loadFollowers(uid)
-        } else {
-            viewModel.loadFollowing(uid)
-        }
+    LaunchedEffect(Unit) {
+        viewModel.loadBlockedUsers()
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { Text("Blocked Users") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -90,7 +82,7 @@ fun FollowListScreen(
                 }
             }
 
-            state.error != null -> {
+            state.blockedUsers.isEmpty() -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -98,23 +90,9 @@ fun FollowListScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = state.error ?: "Something went wrong.",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-
-            state.users.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (type == "followers") "No followers yet." else "Not following anyone yet.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "You haven't blocked anyone.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -126,10 +104,13 @@ fun FollowListScreen(
                         .padding(paddingValues),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    items(state.users) { user ->
-                        FollowUserRow(
+                    items(
+                        items = state.blockedUsers,
+                        key = { it.uid }
+                    ) { user ->
+                        BlockedUserRow(
                             user = user,
-                            onClick = { onUserClick(user.uid) }
+                            onUnblock = { viewModel.unblockUser(user.uid) }
                         )
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
@@ -142,11 +123,10 @@ fun FollowListScreen(
 }
 
 @Composable
-fun FollowUserRow(user: User, onClick: () -> Unit) {
+fun BlockedUserRow(user: User, onUnblock: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -178,7 +158,7 @@ fun FollowUserRow(user: User, onClick: () -> Unit) {
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = user.username,
                 style = MaterialTheme.typography.bodyLarge,
@@ -193,6 +173,12 @@ fun FollowUserRow(user: User, onClick: () -> Unit) {
                     maxLines = 1
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        OutlinedButton(onClick = onUnblock) {
+            Text("Unblock")
         }
     }
 }

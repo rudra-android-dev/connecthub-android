@@ -1,25 +1,40 @@
 package com.example.connecthub.ui.feed
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,13 +68,9 @@ fun FeedScreen(
     onSettingsClick: () -> Unit
 ) {
     var postText by remember { mutableStateOf("") }
-
     val state by viewModel.uiState.collectAsState()
     val bookmarkState by bookmarkViewModel.uiState.collectAsState()
-
-    val currentUserId = remember {
-        FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
-    }
+    val currentUserId = remember { FirebaseAuth.getInstance().currentUser?.uid.orEmpty() }
 
     var reportingPost by remember { mutableStateOf<Post?>(null) }
     val reportViewModel: ReportViewModel = viewModel()
@@ -87,96 +98,165 @@ fun FeedScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("ConnectHub") },
+                title = {
+                    Text(
+                        "ConnectHub",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Open settings"
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp
+            ) {
+                NavigationBarItem(
+                    selected = true,
+                    onClick = {},
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    label = { Text("Home") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onSearchClick,
+                    icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    label = { Text("Search") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onNotificationsClick,
+                    icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifications") },
+                    label = { Text("Alerts") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onBookmarksClick,
+                    icon = { Icon(Icons.Default.Bookmarks, contentDescription = "Bookmarks") },
+                    label = { Text("Saved") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onProfileClick,
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                    label = { Text("Profile") }
+                )
+            }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .imePadding()
         ) {
-
-            OutlinedTextField(
-                value = postText,
-                onValueChange = { postText = it },
-                label = { Text("What's on your mind?") },
-                enabled = !state.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { viewModel.createPost(postText) },
-                enabled = !state.isLoading && postText.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 2.dp
             ) {
-                Text(if (state.isLoading) "Posting..." else "Post")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = postText,
+                        onValueChange = { postText = it },
+                        placeholder = { Text("What's on your mind?") },
+                        enabled = !state.isLoading,
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        ),
+                        maxLines = 3
+                    )
+                    Button(
+                        onClick = { viewModel.createPost(postText) },
+                        enabled = !state.isLoading && postText.isNotBlank(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = if (state.isLoading) "..." else "Post",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             state.error?.let {
                 Text(
                     text = "Couldn't load posts. Please check your connection.",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
             when {
                 state.isLoading && state.posts.isEmpty() -> {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(4) { LoadingPostItem() }
+                        items(5) { LoadingPostItem() }
                     }
                 }
 
                 state.posts.isEmpty() -> {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Nothing here yet.",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Start following people or create your first post.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                text = "Nothing here yet.",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Start following people or be the first to post something.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 
                 else -> {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(state.posts) { post ->
+                        items(
+                            items = state.posts,
+                            key = { it.postId }
+                        ) { post ->
                             PostItem(
                                 post = post,
                                 currentUserId = currentUserId,
@@ -190,36 +270,6 @@ fun FeedScreen(
                         }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(onClick = onNotificationsClick, modifier = Modifier.fillMaxWidth()) {
-                Text("🔔 Notifications")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = onBookmarksClick, modifier = Modifier.fillMaxWidth()) {
-                Text("🔖 Bookmarks")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = onSearchClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Search Users")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = onProfileClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Go to Profile")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = onLogoutClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Logout")
             }
         }
     }

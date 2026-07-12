@@ -15,14 +15,17 @@ import com.example.connecthub.ui.feed.CommentScreen
 import com.example.connecthub.ui.feed.FeedScreen
 import com.example.connecthub.ui.notification.NotificationScreen
 import com.example.connecthub.ui.profile.EditProfileScreen
+import com.example.connecthub.ui.profile.FollowListScreen
 import com.example.connecthub.ui.profile.ProfileScreen
 import com.example.connecthub.ui.profile.SearchUserScreen
 import com.example.connecthub.ui.profile.UserProfileScreen
+import com.example.connecthub.ui.settings.BlockedUsersScreen
 import com.example.connecthub.ui.settings.SettingsScreen
 import com.example.connecthub.viewmodel.AuthViewModel
 import com.example.connecthub.viewmodel.BookmarkViewModel
 import com.example.connecthub.viewmodel.CommentViewModel
 import com.example.connecthub.viewmodel.FeedViewModel
+import com.example.connecthub.viewmodel.FollowListViewModel
 import com.example.connecthub.viewmodel.FollowViewModel
 import com.example.connecthub.viewmodel.NotificationViewModel
 import com.example.connecthub.viewmodel.ProfileViewModel
@@ -37,13 +40,10 @@ fun NavGraph(
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
-    val startDestination =
-        if (authViewModel.isUserLoggedIn()) "feed" else "login"
+    val startDestination = if (authViewModel.isUserLoggedIn()) "feed" else "login"
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
+    NavHost(navController = navController, startDestination = startDestination) {
+
         composable("login") {
             LoginScreen(
                 onRegisterClick = {
@@ -90,21 +90,11 @@ fun NavGraph(
                     val encoded = Uri.encode(postText)
                     navController.navigate("comment/$postId?postText=$encoded")
                 },
-                onProfileClick = {
-                    navController.navigate("profile")
-                },
-                onSearchClick = {
-                    navController.navigate("search")
-                },
-                onNotificationsClick = {
-                    navController.navigate("notifications")
-                },
-                onBookmarksClick = {
-                    navController.navigate("bookmarks")
-                },
-                onSettingsClick = {
-                    navController.navigate("settings")
-                }
+                onProfileClick = { navController.navigate("profile") },
+                onSearchClick = { navController.navigate("search") },
+                onNotificationsClick = { navController.navigate("notifications") },
+                onBookmarksClick = { navController.navigate("bookmarks") },
+                onSettingsClick = { navController.navigate("settings") }
             )
         }
 
@@ -112,15 +102,20 @@ fun NavGraph(
             SettingsScreen(
                 darkMode = darkMode,
                 onDarkModeChanged = onDarkModeChanged,
-                onEditProfile = {
-                    navController.navigate("editProfile")
-                },
+                onEditProfile = { navController.navigate("editProfile") },
+                onBlockedUsers = { navController.navigate("blockedUsers") },
                 onLogout = {
                     authViewModel.logout()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable("blockedUsers") {
+            BlockedUsersScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -149,23 +144,20 @@ fun NavGraph(
             val searchViewModel: SearchViewModel = viewModel()
             SearchUserScreen(
                 viewModel = searchViewModel,
-                onUserClick = { uid ->
-                    navController.navigate("user_profile/$uid")
-                },
+                onUserClick = { uid -> navController.navigate("user_profile/$uid") },
                 onBackClick = { navController.popBackStack() }
             )
         }
 
         composable(
             route = "user_profile/{uid}",
-            arguments = listOf(
-                navArgument("uid") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("uid") { type = NavType.StringType })
         ) { backStackEntry ->
             val uid = backStackEntry.arguments?.getString("uid").orEmpty()
             val userProfileViewModel: UserProfileViewModel = viewModel()
             val followViewModel: FollowViewModel = viewModel()
             val feedViewModel: FeedViewModel = viewModel()
+
             UserProfileScreen(
                 uid = uid,
                 viewModel = userProfileViewModel,
@@ -175,10 +167,34 @@ fun NavGraph(
                     val encoded = Uri.encode(postText)
                     navController.navigate("comment/$postId?postText=$encoded")
                 },
-                onBlockSuccess = {
-                    // Refresh feed so blocked user's posts disappear immediately
-                    feedViewModel.refreshBlockedUsers()
-                }
+                onFollowersClick = {
+                    navController.navigate("follow_list/$uid/followers")
+                },
+                onFollowingClick = {
+                    navController.navigate("follow_list/$uid/following")
+                },
+                onBlockSuccess = { feedViewModel.refreshBlockedUsers() }
+            )
+        }
+
+        composable(
+            route = "follow_list/{uid}/{type}",
+            arguments = listOf(
+                navArgument("uid") { type = NavType.StringType },
+                navArgument("type") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid").orEmpty()
+            val type = backStackEntry.arguments?.getString("type").orEmpty()
+            val followListViewModel: FollowListViewModel = viewModel()
+            FollowListScreen(
+                uid = uid,
+                type = type,
+                onBackClick = { navController.popBackStack() },
+                onUserClick = { clickedUid ->
+                    navController.navigate("user_profile/$clickedUid")
+                },
+                viewModel = followListViewModel
             )
         }
 
@@ -190,8 +206,12 @@ fun NavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onEditProfileClick = {
-                    navController.navigate("editProfile")
+                onEditProfileClick = { navController.navigate("editProfile") },
+                onFollowersClick = { uid ->
+                    navController.navigate("follow_list/$uid/followers")
+                },
+                onFollowingClick = { uid ->
+                    navController.navigate("follow_list/$uid/following")
                 }
             )
         }

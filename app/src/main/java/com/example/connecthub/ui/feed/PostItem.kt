@@ -66,6 +66,8 @@ fun PostItem(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
 
+    val isOwnPost = post.userId == currentUserId
+
     val hasLiked = post.likedBy.contains(currentUserId)
     var likeAnimTrigger by remember { mutableStateOf(false) }
     val likeScale by animateFloatAsState(
@@ -123,7 +125,7 @@ fun PostItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (post.profileImageUrl.isNotEmpty()) {
+                    if (!post.profileImageUrl.isNullOrEmpty()) {
                         AsyncImage(
                             model = post.profileImageUrl,
                             contentDescription = "Profile picture of ${post.username}",
@@ -165,7 +167,7 @@ fun PostItem(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (post.userId == currentUserId) {
+                    if (isOwnPost) {
                         TextButton(onClick = { showDeleteDialog = true }) {
                             Text(
                                 text = "Delete",
@@ -178,7 +180,7 @@ fun PostItem(
                             IconButton(onClick = { expanded = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More options for ${post.username}'s post"
+                                    contentDescription = "More options"
                                 )
                             }
                             DropdownMenu(
@@ -225,8 +227,7 @@ fun PostItem(
                     }
                 ) {
                     Icon(
-                        imageVector = if (hasLiked) Icons.Default.Favorite
-                        else Icons.Default.FavoriteBorder,
+                        imageVector = if (hasLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = if (hasLiked) "Unlike post" else "Like post",
                         tint = if (hasLiked) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -243,10 +244,7 @@ fun PostItem(
                 Spacer(modifier = Modifier.width(20.dp))
 
                 IconButton(onClick = onCommentClick) {
-                    Text(
-                        text = "💬",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text(text = "💬", style = MaterialTheme.typography.titleMedium)
                 }
                 Text(
                     text = post.commentCount.toString(),
@@ -259,8 +257,7 @@ fun PostItem(
 
                 IconButton(onClick = onBookmarkClick) {
                     Icon(
-                        imageVector = if (isBookmarked) Icons.Default.Bookmark
-                        else Icons.Outlined.BookmarkBorder,
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
                         contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark post",
                         tint = if (isBookmarked) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant

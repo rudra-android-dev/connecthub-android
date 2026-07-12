@@ -40,38 +40,33 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.example.connecthub.ui.feed.PostItem
 import com.example.connecthub.viewmodel.ProfileViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(),
     onLogoutClick: () -> Unit,
-    onEditProfileClick: () -> Unit
+    onEditProfileClick: () -> Unit,
+    onFollowersClick: (String) -> Unit = {},
+    onFollowingClick: (String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
 
     LaunchedEffect(Unit) {
         viewModel.loadProfileData()
     }
 
     if (state.isLoading && state.user == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
     if (state.error != null && state.user == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = state.error ?: "An error occurred.",
-                color = MaterialTheme.colorScheme.error
-            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(state.error ?: "An error occurred.", color = MaterialTheme.colorScheme.error)
         }
         return
     }
@@ -82,11 +77,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -96,65 +87,39 @@ fun ProfileScreen(
                         AsyncImage(
                             model = state.user?.profileImageUrl,
                             contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(96.dp)
-                                .clip(CircleShape),
+                            modifier = Modifier.size(96.dp).clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         Box(
-                            modifier = Modifier
-                                .size(96.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray),
+                            modifier = Modifier.size(96.dp).clip(CircleShape).background(Color.LightGray),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Default Profile Icon",
-                                modifier = Modifier.size(48.dp),
-                                tint = Color.White
-                            )
+                            Icon(Icons.Default.Person, null, modifier = Modifier.size(48.dp), tint = Color.White)
                         }
                     }
 
-                    Text(
-                        text = state.user?.username ?: "N/A",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(state.user?.username ?: "N/A", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                     if (!state.user?.bio.isNullOrEmpty()) {
-                        Text(
-                            text = state.user?.bio ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(state.user?.bio ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
-                    Text(
-                        text = state.user?.email ?: "N/A",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(state.user?.email ?: "N/A", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        StatColumn(
-                            count = state.postCount,
-                            label = "Posts"
-                        )
-                        StatColumn(
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        ClickableStatColumn(count = state.postCount, label = "Posts", onClick = null)
+                        ClickableStatColumn(
                             count = state.user?.followersCount ?: 0,
-                            label = "Followers"
+                            label = "Followers",
+                            onClick = { state.user?.uid?.let { onFollowersClick(it) } }
                         )
-                        StatColumn(
+                        ClickableStatColumn(
                             count = state.user?.followingCount ?: 0,
-                            label = "Following"
+                            label = "Following",
+                            onClick = { state.user?.uid?.let { onFollowingClick(it) } }
                         )
                     }
                 }
@@ -162,10 +127,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onEditProfileClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onEditProfileClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Edit Profile")
             }
 
@@ -173,9 +135,7 @@ fun ProfileScreen(
 
             Button(
                 onClick = onLogoutClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Logout")
@@ -184,12 +144,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "My Posts",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Text("My Posts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
 
         if (state.userPosts.isEmpty() && !state.isLoading) {
@@ -201,10 +156,10 @@ fun ProfileScreen(
                 )
             }
         } else {
-            items(state.userPosts) { post ->
+            items(state.userPosts, key = { it.postId }) { post ->
                 PostItem(
                     post = post,
-                    currentUserId = state.user?.uid ?: "",
+                    currentUserId = currentUserId,
                     onLikeClick = {},
                     onDeleteClick = {},
                     onCommentClick = {}
