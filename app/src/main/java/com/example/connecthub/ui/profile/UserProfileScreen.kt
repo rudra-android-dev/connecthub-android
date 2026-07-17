@@ -82,9 +82,7 @@ fun UserProfileScreen(
     }
 
     LaunchedEffect(state.user) {
-        state.user?.let {
-            followViewModel.init(uid)
-        }
+        state.user?.let { followViewModel.init(uid) }
     }
 
     LaunchedEffect(state.isBlocked) {
@@ -150,14 +148,26 @@ fun UserProfileScreen(
                                     )
                                 } else {
                                     Box(
-                                        modifier = Modifier.size(96.dp).clip(CircleShape).background(Color.LightGray),
+                                        modifier = Modifier
+                                            .size(96.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.LightGray),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(Icons.Default.Person, null, modifier = Modifier.size(48.dp), tint = Color.White)
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(48.dp),
+                                            tint = Color.White
+                                        )
                                     }
                                 }
 
-                                Text(state.user?.username ?: "", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = state.user?.username ?: "",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
 
                                 if (!state.user?.bio.isNullOrEmpty()) {
                                     Text(
@@ -208,26 +218,38 @@ fun UserProfileScreen(
                                         ) { Text("Follow") }
                                     }
 
-                                    followState.error?.let {
-                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                    followState.error?.let { err ->
+                                        Text(
+                                            text = err,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
                                     }
 
                                     if (state.isBlocked) {
                                         OutlinedButton(
                                             onClick = { viewModel.unblockUser(uid) },
                                             modifier = Modifier.fillMaxWidth(),
-                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                            colors = ButtonDefaults.outlinedButtonColors(
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            )
                                         ) { Text("Unblock User") }
                                     } else {
                                         Button(
                                             onClick = { viewModel.blockUser(uid) },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            ),
                                             modifier = Modifier.fillMaxWidth()
                                         ) { Text("Block User") }
                                     }
 
-                                    state.blockMessage?.let {
-                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    state.blockMessage?.let { msg ->
+                                        Text(
+                                            text = msg,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 }
                             }
@@ -237,12 +259,20 @@ fun UserProfileScreen(
                     item {
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Posts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Posts",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     if (state.posts.isEmpty()) {
                         item {
-                            Text("No posts yet.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                            Text(
+                                "No posts yet.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
                     } else {
                         items(state.posts) { post ->
@@ -262,6 +292,10 @@ fun UserProfileScreen(
     }
 }
 
+/**
+ * A stat column that optionally responds to taps.
+ * Used for Posts (non-clickable), Followers, and Following (both clickable).
+ */
 @Composable
 fun ClickableStatColumn(count: Int, label: String, onClick: (() -> Unit)?) {
     Column(
@@ -283,10 +317,4 @@ fun ClickableStatColumn(count: Int, label: String, onClick: (() -> Unit)?) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
-}
-
-// Keep StatColumn for ProfileScreen compatibility
-@Composable
-fun StatColumn(count: Int, label: String) {
-    ClickableStatColumn(count = count, label = label, onClick = null)
 }

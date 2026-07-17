@@ -21,8 +21,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,7 +57,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun FeedScreen(
     viewModel: FeedViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel(),
-    onLogoutClick: () -> Unit,
     onCommentClick: (String, String) -> Unit,
     onProfileClick: () -> Unit,
     onSearchClick: () -> Unit,
@@ -186,14 +183,11 @@ fun FeedScreen(
                         ),
                         maxLines = 3
                     )
-                    Button(
+                    androidx.compose.material3.Button(
                         onClick = { viewModel.createPost(postText) },
                         enabled = !state.isLoading && postText.isNotBlank(),
                         shape = MaterialTheme.shapes.extraLarge,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                     ) {
                         Text(
                             text = if (state.isLoading) "..." else "Post",

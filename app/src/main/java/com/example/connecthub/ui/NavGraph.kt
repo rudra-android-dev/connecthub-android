@@ -80,12 +80,6 @@ fun NavGraph(
             FeedScreen(
                 viewModel = feedViewModel,
                 bookmarkViewModel = bookmarkViewModel,
-                onLogoutClick = {
-                    authViewModel.logout()
-                    navController.navigate("login") {
-                        popUpTo("feed") { inclusive = true }
-                    }
-                },
                 onCommentClick = { postId, postText ->
                     val encoded = Uri.encode(postText)
                     navController.navigate("comment/$postId?postText=$encoded")
@@ -115,9 +109,7 @@ fun NavGraph(
         }
 
         composable("blockedUsers") {
-            BlockedUsersScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            BlockedUsersScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable("bookmarks") {
@@ -157,7 +149,6 @@ fun NavGraph(
             val userProfileViewModel: UserProfileViewModel = viewModel()
             val followViewModel: FollowViewModel = viewModel()
             val feedViewModel: FeedViewModel = viewModel()
-
             UserProfileScreen(
                 uid = uid,
                 viewModel = userProfileViewModel,
@@ -167,12 +158,8 @@ fun NavGraph(
                     val encoded = Uri.encode(postText)
                     navController.navigate("comment/$postId?postText=$encoded")
                 },
-                onFollowersClick = {
-                    navController.navigate("follow_list/$uid/followers")
-                },
-                onFollowingClick = {
-                    navController.navigate("follow_list/$uid/following")
-                },
+                onFollowersClick = { navController.navigate("follow_list/$uid/followers") },
+                onFollowingClick = { navController.navigate("follow_list/$uid/following") },
                 onBlockSuccess = { feedViewModel.refreshBlockedUsers() }
             )
         }
@@ -191,9 +178,7 @@ fun NavGraph(
                 uid = uid,
                 type = type,
                 onBackClick = { navController.popBackStack() },
-                onUserClick = { clickedUid ->
-                    navController.navigate("user_profile/$clickedUid")
-                },
+                onUserClick = { clickedUid -> navController.navigate("user_profile/$clickedUid") },
                 viewModel = followListViewModel
             )
         }
@@ -207,12 +192,8 @@ fun NavGraph(
                     }
                 },
                 onEditProfileClick = { navController.navigate("editProfile") },
-                onFollowersClick = { uid ->
-                    navController.navigate("follow_list/$uid/followers")
-                },
-                onFollowingClick = { uid ->
-                    navController.navigate("follow_list/$uid/following")
-                }
+                onFollowersClick = { uid -> navController.navigate("follow_list/$uid/followers") },
+                onFollowingClick = { uid -> navController.navigate("follow_list/$uid/following") }
             )
         }
 

@@ -19,14 +19,22 @@ class FollowViewModel : ViewModel() {
     fun init(uid: String) {
         if (targetUid == uid) return
         targetUid = uid
-        profileRepository.getUserByUid(uid) { user ->
+        refreshCountsFromFirestore()
+        checkFollowing()
+    }
+
+    /**
+     * Always fetches fresh counts from Firestore.
+     * Called on init and after every follow/unfollow so the displayed
+     * number always reflects the real Firestore value, not a local guess.
+     */
+    private fun refreshCountsFromFirestore() {
+        profileRepository.getUserByUid(targetUid) { user ->
             _uiState.value = _uiState.value.copy(
                 followers = user?.followersCount ?: 0,
                 following = user?.followingCount ?: 0
             )
         }
-
-        checkFollowing()
     }
 
     private fun checkFollowing() {
@@ -44,6 +52,7 @@ class FollowViewModel : ViewModel() {
                     followers = _uiState.value.followers + 1,
                     isLoading = false
                 )
+                refreshCountsFromFirestore()
             } else {
                 _uiState.value = _uiState.value.copy(
                     error = message,
@@ -62,6 +71,7 @@ class FollowViewModel : ViewModel() {
                     followers = (_uiState.value.followers - 1).coerceAtLeast(0),
                     isLoading = false
                 )
+                refreshCountsFromFirestore()
             } else {
                 _uiState.value = _uiState.value.copy(
                     error = message,
