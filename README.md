@@ -3,7 +3,19 @@
 A full featured social media Android app built with Kotlin and Jetpack Compose,
 using Firebase Authentication and Firestore as the backend.
 
-## Screenshots
+## 📸 Screenshots
+
+| Home Feed | Comments |
+|-----------|----------|
+| <img src="screenshots/feed.jpeg" width="300"> | <img src="screenshots/comments.jpeg" width="300"> |
+
+| Search | Profile |
+|---------|---------|
+| <img src="screenshots/search.jpeg" width="300"> | <img src="screenshots/profile.jpeg" width="300"> |
+
+| Login Screen | Settings |
+|---------------|----------|
+| <img src="screenshots/login.jpeg" width="300"> | <img src="screenshots/settings.jpeg" width="300"> |
 
 
 ## Features
